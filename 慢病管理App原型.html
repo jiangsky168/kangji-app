@@ -106,8 +106,7 @@ body{
 /* 底部导航 */
 .tabbar{
   position:absolute;left:0;right:0;bottom:0;height:78px;
-  background:rgba(255,255,255,.92);
-  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  background:rgba(252,254,253,.98);
   border-top:1px solid var(--line);
   display:flex;align-items:stretch;justify-content:space-around;
   padding-bottom:14px;z-index:10;
@@ -282,7 +281,7 @@ body{
 .abn-tip{font-size:12px;color:var(--ink-3);text-align:right}
 
 /* 报告对比 */
-.cmp-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto auto;gap:8px;align-items:center;padding:11px 0}
+.cmp-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto auto auto;gap:8px;align-items:center;padding:11px 0}
 .cmp-row + .cmp-row{border-top:1px solid var(--line)}
 .c-name{font-size:13.5px;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .c-old{font-size:13px;color:var(--ink-3);text-align:right}
@@ -697,6 +696,7 @@ input::placeholder{color:#5F746F;opacity:1}
           <div class="iv-row"><span class="iv-name">谷草转氨酶</span><span class="iv-val num">38</span><span class="iv-unit">U/L</span><span class="iv-ref">&lt;40</span></div>
           <div class="iv-row"><span class="iv-name">γ-谷氨酰转肽酶</span><span class="iv-val num">48</span><span class="iv-unit">U/L</span><span class="iv-ref">&lt;50</span></div>
           <div style="margin-top:10px;font-size:12.5px;color:var(--ink-2);line-height:1.6;background:var(--warn-bg);border-radius:10px;padding:10px 12px">谷丙转氨酶连续 2 次偏高，与脂肪肝管理相关。建议 3 个月后复查，结合体重控制观察变化。</div>
+          <div style="margin-top:12px"><button class="btn-ghost" onclick="go('page-metric')">查看趋势详情</button></div>
         </div>
         <div class="card" data-card="weight" style="display:none">
           <div class="card-title">体重 <span class="badge warn">超重</span></div>
@@ -1320,7 +1320,7 @@ input::placeholder{color:#5F746F;opacity:1}
           <span class="cv-corner bl"></span><span class="cv-corner br"></span>
           <div class="cv-guide"></div>
           <div class="cv-sheet">
-            <div style="font-size:11px;color:#7A8F8A;font-weight:700;margin-bottom:8px">市第一人民医院 检验报告单</div>
+            <div style="font-size:11px;color:#5C726D;font-weight:700;margin-bottom:8px">市第一人民医院 检验报告单</div>
             <div class="cv-row"><span>葡萄糖 GLU</span><b>6.4</b></div>
             <div class="cv-row"><span>总胆固醇 TC</span><b>5.6</b></div>
             <div class="cv-row"><span>甘油三酯 TG</span><b>2.1</b></div>
@@ -1425,6 +1425,8 @@ function showScreen(id){
   document.getElementById(screens[id]).scrollTop = 0;
 }
 function go(id){
+  // 兼容 'page-xxx' 与短名两种调用形式
+  id = String(id).replace(/^page-/,'');
   stack.push(id);
   showScreen(id);
 }
@@ -1475,6 +1477,7 @@ function startScan(){
   document.getElementById('scan-step1').style.display='';
   document.getElementById('scan-step2').style.display='none';
   document.getElementById('ocr-state').classList.remove('on');
+  document.getElementById('step3').classList.remove('done');
 }
 function doScan(){
   var ocr = document.getElementById('ocr-state');
