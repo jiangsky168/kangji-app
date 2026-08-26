@@ -387,6 +387,24 @@ Flutter App
 - MVP 不需要 Elasticsearch。医院、报告和患教内容先用 PostgreSQL 全文检索或前缀检索。
 - 当数据库 p95 因重复读明显超标时再加缓存；当搜索需要中文分词、同义词和复杂排序且 PostgreSQL 无法满足时再加搜索服务。
 
+### 8.5 原型阶段部署现状（2026-08-26）
+
+高保真原型（单文件 HTML）已上线，用于手机真机体验和团队评审，**非生产环境**：
+
+| 项 | 内容 |
+|---|---|
+| 公网地址 | https://jiangsky168.github.io/kangji-app/ |
+| 托管方式 | GitHub Pages（public 仓库 jiangsky168/kangji-app，main 分支根目录，legacy 构建） |
+| 局域网地址 | http://192.168.1.56:8000/（本机 python http.server，Mac 与手机同 WiFi 时可用） |
+| 入口文件 | 仓库根目录 index.html（慢病管理App原型.html 的副本，部署用） |
+| 更新方式 | 修改后 `git push origin main`，Pages 约 1 分钟自动重建 |
+| 注意事项 | 原型含演示数据；GitHub 访问需代理（HTTPS_PROXY=http://127.0.0.1:7897） |
+
+部署踩坑记录（供以后复用）：
+1. gh 交互登录在非交互环境不可用，改用 GitHub OAuth 设备流 API（client_id 用 gh CLI 公开 ID，curl 带代理），用户浏览器输 code 授权后轮询换 token
+2. `gh auth login --with-token` 不会配置 git credential helper，需 `git config --global credential.helper "!gh auth git-credential"`
+3. 推送前必须确认 index.html 已 git add 并提交，否则 Pages 根路径 404
+
 ## 9. 安全与合规清单
 
 ### 9.1 法规结论
