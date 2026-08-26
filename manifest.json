@@ -1,6 +1,6 @@
 {
-  "name": "康迹 · 代谢健康档案",
-  "short_name": "康迹",
+  "name": "康福 · 代谢健康档案",
+  "short_name": "康福",
   "description": "个人代谢健康档案：四高与脂肪肝的检验报告归档、指标管理、AI解读",
   "start_url": "./",
   "scope": "./",

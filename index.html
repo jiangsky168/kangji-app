@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>康迹 · 代谢健康档案 App 原型</title>
+<title>康福 · 代谢健康档案 App 原型</title>
 <!-- PWA -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0F766E">
@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="康迹">
+<meta name="apple-mobile-web-app-title" content="康福">
 <style>
 /* ============ 设计变量 ============ */
 :root{
@@ -644,7 +644,7 @@ input::placeholder{color:#5F746F;opacity:1}
     <div class="page on" id="page-home">
       <div class="topbar">
         <div>
-          <h1>康迹 <span class="home-member-name" id="home-member-name">张卫东</span></h1>
+          <h1>康福 <span class="home-member-name" id="home-member-name">张卫东</span></h1>
           <div class="sub" id="home-date">8月24日 周一 · 晴</div>
         </div>
         <button class="icon-btn" onclick="go('page-mine')" aria-label="我的">
@@ -981,7 +981,7 @@ input::placeholder{color:#5F746F;opacity:1}
       <div style="font-size:13px;color:var(--ink-2);line-height:1.65">回答两个简单问题，生成一份复诊准备清单。紧急不适请及时就医。</div>
 
       <div id="previsit-step1">
-        <div class="chat-block"><span class="chat-avatar">康迹</span><div class="chat-bubble">最近两周有没有头晕、胸闷？</div></div>
+        <div class="chat-block"><span class="chat-avatar">康福</span><div class="chat-bubble">最近两周有没有头晕、胸闷？</div></div>
         <div class="answer-chips">
           <button class="answer-chip" data-answer="有" onclick="answerPrevisit(this)">有</button>
           <button class="answer-chip" data-answer="无" onclick="answerPrevisit(this)">无</button>
@@ -991,7 +991,7 @@ input::placeholder{color:#5F746F;opacity:1}
       </div>
 
       <div id="previsit-step2" style="display:none">
-        <div class="chat-block"><span class="chat-avatar">康迹</span><div class="chat-bubble">这周空腹血糖测了几次？</div></div>
+        <div class="chat-block"><span class="chat-avatar">康福</span><div class="chat-bubble">这周空腹血糖测了几次？</div></div>
         <div class="previsit-number"><input id="previsit-count" type="number" min="0" max="14" inputmode="numeric" aria-label="本周空腹血糖测量次数"><span>次</span></div>
         <button class="btn-primary" style="margin-top:14px" onclick="generatePrevisit()">生成复诊准备清单</button>
       </div>
@@ -1493,12 +1493,12 @@ input::placeholder{color:#5F746F;opacity:1}
         </div>
         <div class="set-row subscribe-entry" onclick="go('page-subscribe')">
           <span class="s-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 15 9l6 .8-4.5 4.3 1.2 6.1L12 17.3l-5.7 2.9 1.2-6.1L3 9.8 9 9z"/></svg></span>
-          <div class="s-main">康迹会员<div class="s-sub">深度解读与家庭档案</div></div>
+          <div class="s-main">康福会员<div class="s-sub">深度解读与家庭档案</div></div>
           <span class="s-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></span>
         </div>
       </div>
 
-      <div class="footnote">康迹 · 代谢健康档案 · 原型 V1<br>数据加密存储 · 隐私政策 · 用户协议</div>
+      <div class="footnote">康福 · 代谢健康档案 · 原型 V1<br>数据加密存储 · 隐私政策 · 用户协议</div>
     </div>
   </div>
 
@@ -1549,7 +1549,7 @@ input::placeholder{color:#5F746F;opacity:1}
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
           返回
         </button>
-        <h1 style="font-size:18px">康迹会员</h1>
+        <h1 style="font-size:18px">康福会员</h1>
         <span style="width:38px"></span>
       </div>
 

@@ -1,5 +1,5 @@
-// 康迹原型 PWA Service Worker：离线缓存核心资源
-const CACHE = 'kangji-v1';
+// 康福原型 PWA Service Worker：离线缓存核心资源
+const CACHE = 'kangfu-v1';
 const ASSETS = ['./', './index.html', './manifest.json', './pwa/icon-192.png', './pwa/icon-512.png', './pwa/apple-touch-icon.png'];
 
 self.addEventListener('install', (e) => {

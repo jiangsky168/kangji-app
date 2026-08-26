@@ -213,7 +213,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   console.log('=== 16. V2 付费订阅 ===');
   doc.querySelector('.tabbar .tab[data-tab="mine"]').click();
   doc.querySelector('.subscribe-entry').click();
-  assert('康迹会员入口 -> 订阅页', visible('screen-subscribe'));
+  assert('康福会员入口 -> 订阅页', visible('screen-subscribe'));
   assert('订阅页显示免费版和会员版对比', doc.querySelectorAll('#page-subscribe .benefit-table > div').length === 15);
   doc.querySelector('#page-subscribe .price-card[data-plan="年卡"]').click();
   assert('年卡价格可选择', doc.querySelector('#page-subscribe .price-card[data-plan="年卡"]').classList.contains('on'));
