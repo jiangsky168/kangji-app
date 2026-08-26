@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>康迹 · 代谢健康档案 App 原型</title>
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0F766E">
+<link rel="apple-touch-icon" href="pwa/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="康迹">
 <style>
 /* ============ 设计变量 ============ */
 :root{
@@ -2220,6 +2228,13 @@ document.addEventListener('DOMContentLoaded', function(){
   });
   document.getElementById('diet-note').setAttribute('aria-label','饮食备注');
 });
+
+// ============ PWA Service Worker 注册 ============
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('./sw.js').catch(function(){ /* 静默失败，不影响使用 */ });
+  });
+}
 </script>
 </body>
 </html>
