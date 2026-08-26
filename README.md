@@ -6,7 +6,7 @@
 
 | 入口 | 地址 |
 |---|---|
-| **公网（手机真机体验）** | https://jiangsky168.github.io/kangji-app/ |
+| **公网（手机真机体验）** | https://jiangsky168.github.io/kangji-app/（历史地址，沿用"康迹"拼音 slug） |
 | 局域网（Mac 与手机同 WiFi） | http://192.168.1.56:8000/ |
 | 仓库 | https://github.com/jiangsky168/kangji-app |
 

@@ -119,7 +119,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   await sleep(1000);
   assert('保存后回首页(来源页)', visible('screen-home'));
   doc.querySelector('.tabbar .tab[data-tab="diet"]').click();
-  assert('晚餐卡已变为记录', doc.querySelector('#diet-dinner').style.opacity === '1');
+  assert('午餐卡已变为记录(按餐次更新)', doc.querySelector('#diet-lunch').style.opacity === '1');
 
   console.log('=== 7. 流程再次进入（状态重置） ===');
   doc.querySelector('.icon-btn[aria-label="记饮食"]').click();
@@ -277,6 +277,48 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   assert('我的页档案已更新', doc.getElementById('mine-profile-meta').textContent.indexOf('王秀兰') >= 0 || doc.getElementById('mine-profile-meta').textContent.indexOf('1960') >= 0);
 
   function stackReset(){ win.eval('stack=["home"];'); }
+
+  console.log('=== 12. 修复项回归（全面检查后） ===');
+  // 表单验证：空手机号阻止
+  stackReset();
+  win.eval('switchUser()');
+  doc.querySelector('#ob-step1 .btn-primary').click();
+  doc.getElementById('ob-phone').value = '123';
+  doc.querySelector('#ob-step2 .btn-primary').click();
+  assert('无效手机号被拦截', doc.getElementById('ob-step2').style.display !== 'none');
+  doc.getElementById('ob-phone').value = '13800138000';
+  doc.querySelector('#ob-step2 .btn-primary').click();
+  assert('有效手机号进入步骤3', doc.getElementById('ob-step3').style.display !== 'none');
+  doc.getElementById('ob-name').value = '测试';
+  doc.getElementById('ob-year').value = '3000';
+  doc.getElementById('ob-height').value = '165';
+  doc.querySelector('#ob-step3 .btn-primary').click();
+  assert('非法年份被拦截', doc.getElementById('ob-step3').style.display !== 'none');
+  doc.getElementById('ob-year').value = '1960';
+  doc.querySelector('#ob-step3 .btn-primary').click();
+  assert('合法信息进入步骤4', doc.getElementById('ob-step4').style.display !== 'none');
+  // 引导期间 Tabbar 隐藏
+  assert('引导期间Tabbar隐藏', doc.querySelector('.tabbar').style.display === 'none');
+  // 完成建档
+  doc.querySelector('#ob-step4 .btn-primary').click();
+  await sleep(1000);
+  assert('建档后Tabbar恢复', doc.querySelector('.tabbar').style.display === '');
+  assert('非演示模式有演示标注', !!doc.querySelector('.demo-banner'));
+
+  // 扫描重置：重新拍回取景
+  doc.querySelector('.tabbar .tab[data-tab="home"]').click();
+  doc.querySelector('#page-home .btn-primary').click();
+  doc.querySelector('#scan-step1 .btn-primary').click();
+  await sleep(2400);
+  doc.querySelector('#scan-step2 .btn-ghost').click();
+  assert('重新拍回到取景步骤', doc.querySelector('#scan-step1').style.display !== 'none' && doc.querySelector('#scan-step2').style.display === 'none');
+  doc.querySelector('#page-scan .btn-back').click();
+
+  // 对比汇总动态计算
+  win.eval('calcCompareSummary()');
+  assert('对比汇总改善数=7', doc.getElementById('sum-better').textContent === '7');
+  assert('对比汇总恶化数=2', doc.getElementById('sum-worse').textContent === '2');
+  assert('对比汇总总数=17', doc.getElementById('sum-total').textContent === '17');
 
   console.log(`\n结果: ${pass} 通过, ${fail} 失败`);
   process.exit(fail ? 1 : 0);

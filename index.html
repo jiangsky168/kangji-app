@@ -406,6 +406,13 @@ body{
 }
 .switch-mini:active{transform:scale(.95)}
 
+/* 非演示模式的演示数据标注 */
+.demo-banner{
+  background:var(--warn-bg);border:1px solid #FDE68A;color:#92400E;
+  border-radius:var(--r-ctl);padding:10px 14px;font-size:12.5px;font-weight:600;
+  line-height:1.6;margin-bottom:12px;
+}
+
 /* 拍照流程 */
 .camera-view{
   aspect-ratio:3/4;border-radius:20px;overflow:hidden;position:relative;
@@ -442,20 +449,20 @@ body{
 .ocr-steps i{width:34px;height:4px;border-radius:2px;background:rgba(255,255,255,.2)}
 .ocr-steps i.done{background:#2DD4BF}
 
-/* 确认页表格 */
+/* 确认页表格（弹性换行，窄屏两行布局） */
 .confirm-table{border:1px solid var(--line);border-radius:var(--r-ctl);overflow:hidden;margin-top:4px}
-.confirm-table .ct-row{display:flex;align-items:center;gap:6px;padding:11px 14px;background:var(--surface)}
+.confirm-table .ct-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:11px 14px;background:var(--surface)}
 .confirm-table .ct-row + .ct-row{border-top:1px solid var(--line)}
 .confirm-table .ct-name{width:88px;font-size:13.5px;font-weight:600;flex:none}
 .confirm-table input{
-  flex:1;border:1px solid var(--line);border-radius:8px;padding:7px 10px;
+  flex:1 1 140px;min-width:100px;border:1px solid var(--line);border-radius:8px;padding:7px 10px;
   font-size:15px;font-weight:700;text-align:right;color:var(--ink);
-  background:#FAFCFB;font-family:var(--font);font-variant-numeric:tabular-nums;min-width:0;
+  background:#FAFCFB;font-family:var(--font);font-variant-numeric:tabular-nums;
 }
 .confirm-table input:focus{outline:2px solid var(--teal-600);outline-offset:0;border-color:var(--teal-600);background:#fff}
 input::placeholder{color:#5F746F;opacity:1}
-.confirm-table .ct-unit{font-size:12px;color:var(--ink-3);width:56px;flex:none;text-align:left}
-.confirm-table .ct-ref{font-size:11px;color:var(--ink-3);width:70px;flex:none;text-align:right}
+.confirm-table .ct-unit{font-size:11.5px;color:var(--ink-3);flex:none;text-align:left}
+.confirm-table .ct-ref{font-size:11px;color:var(--ink-3);flex:none;text-align:left}
 
 /* toast */
 .toast{
@@ -1255,7 +1262,7 @@ input::placeholder{color:#5F746F;opacity:1}
         <button class="pill" onclick="pill(this)">护肝</button>
       </div>
 
-      <div class="card meal-card">
+      <div class="card meal-card" id="diet-breakfast">
         <div class="meal-photo" style="background:linear-gradient(150deg,#E8B45A,#C97B2D)">
           <span>早餐</span>
         </div>
@@ -1269,7 +1276,7 @@ input::placeholder{color:#5F746F;opacity:1}
         </div>
       </div>
 
-      <div class="card meal-card" style="margin-top:12px">
+      <div class="card meal-card" style="margin-top:12px" id="diet-lunch">
         <div class="meal-photo" style="background:linear-gradient(150deg,#B96B4E,#8A4028)">
           <span>午餐</span>
         </div>
@@ -1521,7 +1528,7 @@ input::placeholder{color:#5F746F;opacity:1}
         </div>
         <div class="set-row devices-entry" onclick="go('page-devices')">
           <span class="s-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3h8v18H8z"/><path d="M10 6h4M11 18h2"/></svg></span>
-          <div class="s-main">数据与设备<div class="s-sub">2 个数据源已连接</div></div>
+          <div class="s-main">数据与设备<div class="s-sub" id="devices-summary">2 个数据源已连接</div></div>
           <span class="s-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></span>
         </div>
         <div class="set-row subscribe-entry" onclick="go('page-subscribe')">
@@ -1531,7 +1538,7 @@ input::placeholder{color:#5F746F;opacity:1}
         </div>
       </div>
 
-      <div class="footnote">康福 · 代谢健康档案 · 原型 V1<br>数据加密存储 · 隐私政策 · 用户协议</div>
+      <div class="footnote">康福 · 代谢健康档案 · 原型 V1<br>原型演示：数据仅保存在本机浏览器，未实现加密云存储</div>
     </div>
   </div>
 
@@ -1722,11 +1729,11 @@ input::placeholder{color:#5F746F;opacity:1}
       <div class="card" style="margin-top:12px">
         <div class="card-title">变化总览</div>
         <div class="cmp-sum">
-          <div class="cs ok"><b class="num">6</b><span>改善</span></div>
-          <div class="cs bad"><b class="num">2</b><span>恶化</span></div>
-          <div class="cs"><b class="num">9</b><span>持平</span></div>
+          <div class="cs ok"><b class="num" id="sum-better">0</b><span>改善</span></div>
+          <div class="cs bad"><b class="num" id="sum-worse">0</b><span>恶化</span></div>
+          <div class="cs"><b class="num" id="sum-flat">0</b><span>持平</span></div>
         </div>
-        <div style="font-size:12.5px;color:var(--ink-2);margin-top:10px">对比 17 项指标 · 间隔 29 天 · 覆盖生化 / 血常规 / 尿常规</div>
+        <div style="font-size:12.5px;color:var(--ink-2);margin-top:10px">对比 <span id="sum-total">0</span> 项指标 · 间隔 29 天 · 覆盖生化 / 血常规 / 尿常规</div>
       </div>
 
       <!-- AI 解读 -->
@@ -1908,7 +1915,7 @@ input::placeholder{color:#5F746F;opacity:1}
       <!-- 步骤2：确认指标 -->
       <div id="scan-step2" style="display:none">
         <div class="card" style="margin-top:6px">
-          <div class="card-title">识别结果 <span class="badge ok">12 项已识别</span></div>
+          <div class="card-title">识别结果 <span class="badge ok">10 项已识别</span></div>
           <div style="font-size:12.5px;color:var(--ink-2);line-height:1.6;margin-bottom:10px">请核对数值，识别可能有误差，可点选修改。手写或模糊处已跳过。</div>
           <div class="confirm-table">
             <div class="ct-row"><span class="ct-name">空腹血糖</span><input class="num" value="6.4"><span class="ct-unit">mmol/L</span><span class="ct-ref">&lt;6.1</span></div>
@@ -1936,7 +1943,7 @@ input::placeholder{color:#5F746F;opacity:1}
         </div>
 
         <div style="margin-top:14px;display:flex;gap:10px">
-          <button class="btn-ghost" style="flex:1" onclick="back()">重新拍</button>
+          <button class="btn-ghost" style="flex:1" onclick="resetScan()">重新拍</button>
           <button class="btn-primary" style="flex:2" onclick="saveScan()">确认归档</button>
         </div>
       </div>
@@ -1958,7 +1965,7 @@ input::placeholder{color:#5F746F;opacity:1}
             <button class="btn-primary" onclick="obNext(2)">开始使用</button>
             <button class="btn-ghost" style="margin-top:12px" onclick="enterDemo()">先看演示数据</button>
           </div>
-          <div style="font-size:11.5px;color:var(--ink-3);margin-top:22px;text-align:center;line-height:1.7">数据仅保存在设备与加密云端，不作他用<br>本应用为健康档案工具，不提供诊断和治疗建议</div>
+          <div style="font-size:11.5px;color:var(--ink-3);margin-top:22px;text-align:center;line-height:1.7">原型演示：数据仅保存在本机浏览器，未实现加密云存储<br>本应用为健康档案工具，不提供诊断和治疗建议</div>
         </div>
       </div>
 
@@ -1970,14 +1977,14 @@ input::placeholder{color:#5F746F;opacity:1}
           <div style="margin-top:28px">
             <div style="font-size:13px;font-weight:700;color:var(--ink-2);margin-bottom:8px">手机号</div>
             <input id="ob-phone" type="tel" inputmode="numeric" maxlength="11" placeholder="请输入 11 位手机号" style="width:100%;border:1.5px solid var(--line);border-radius:12px;padding:14px;font-size:17px;font-family:var(--font);background:var(--surface);color:var(--ink);letter-spacing:.03em">
-            <button class="btn-primary" style="margin-top:16px" onclick="obNext(3)">获取验证码</button>
+            <button class="btn-primary" style="margin-top:16px" onclick="obPhoneNext()">获取验证码</button>
           </div>
           <div style="display:flex;gap:10px;margin-top:20px;align-items:center">
             <div style="flex:1;height:1px;background:var(--line)"></div>
             <span style="font-size:12px;color:var(--ink-3)">或</span>
             <div style="flex:1;height:1px;background:var(--line)"></div>
           </div>
-          <button class="btn-ghost" style="margin-top:20px" onclick="obNext(2)">
+          <button class="btn-ghost" style="margin-top:20px" onclick="obWechatNext()">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-3.16 19.5c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.9 1.53 2.35 1.09 2.92.83.09-.65.35-1.09.64-1.34-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02a9.6 9.6 0 0 1 5 0c1.91-1.3 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.6 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2z"/></svg>
             微信一键登录
           </button>
@@ -2002,7 +2009,7 @@ input::placeholder{color:#5F746F;opacity:1}
             <input id="ob-year" type="number" inputmode="numeric" maxlength="4" placeholder="例如：1965" style="width:100%;border:1.5px solid var(--line);border-radius:12px;padding:14px;font-size:17px;font-family:var(--font);background:var(--surface);color:var(--ink);font-variant-numeric:tabular-nums">
             <div style="font-size:13px;font-weight:700;color:var(--ink-2);margin:20px 0 8px">身高（厘米）</div>
             <input id="ob-height" type="number" inputmode="numeric" maxlength="3" placeholder="例如：165" style="width:100%;border:1.5px solid var(--line);border-radius:12px;padding:14px;font-size:17px;font-family:var(--font);background:var(--surface);color:var(--ink);font-variant-numeric:tabular-nums">
-            <button class="btn-primary" style="margin-top:26px" onclick="obNext(4)">下一步</button>
+            <button class="btn-primary" style="margin-top:26px" onclick="obInfoNext()">下一步</button>
           </div>
         </div>
       </div>
@@ -2068,9 +2075,13 @@ var screens = {
 var stack = ['home'];
 
 function showScreen(id){
+  if(!screens[id]){ id = 'home'; stack = ['home']; }
   Object.values(screens).forEach(function(s){ document.getElementById(s).style.display='none'; });
   document.getElementById(screens[id]).style.display='block';
   document.getElementById(screens[id]).scrollTop = 0;
+  // 引导期间隐藏底部导航
+  var tb = document.querySelector('.tabbar');
+  if(tb) tb.style.display = (id==='onboard') ? 'none' : '';
 }
 function go(id){
   // 兼容 'page-xxx' 与短名两种调用形式
@@ -2213,13 +2224,22 @@ function toggleDevice(el, name){
   if(name==='Apple 健康' || name==='三诺血糖仪'){
     row.querySelector('.device-sync').textContent = on ? '刚刚完成同步' : '同步已暂停';
   }
+  // 同步更新"我的"页摘要
+  var connected = 0;
+  document.querySelectorAll('#page-devices .device-state').forEach(function(s){
+    if(s.textContent === '已连接') connected++;
+  });
+  var summary = document.getElementById('devices-summary');
+  if(summary) summary.textContent = connected + ' 个数据源已连接';
   toast(name+(on ? ' 已连接' : ' 已断开'));
 }
 
 // ============ OCR 扫描流程 ============
 var scanFrom = 'home';
+var scanToken = 0;
 function startScan(){
   scanFrom = stack.length ? stack[stack.length-1] : 'home';
+  scanToken++;
   stack.push('scan');
   showScreen('scan');
   document.getElementById('scan-step1').style.display='';
@@ -2227,19 +2247,37 @@ function startScan(){
   document.getElementById('ocr-state').classList.remove('on');
   document.getElementById('step3').classList.remove('done');
 }
+function resetScan(){
+  scanToken++;
+  document.getElementById('scan-step1').style.display='';
+  document.getElementById('scan-step2').style.display='none';
+  document.getElementById('ocr-state').classList.remove('on');
+  document.getElementById('step3').classList.remove('done');
+}
 function doScan(){
+  var myToken = scanToken;
   var ocr = document.getElementById('ocr-state');
   ocr.classList.add('on');
   document.getElementById('step3').classList.add('done');
   setTimeout(function(){
+    if(myToken !== scanToken) return; // 流程已重置/退出，忽略旧定时器
     ocr.classList.remove('on');
     document.getElementById('scan-step1').style.display='none';
     document.getElementById('scan-step2').style.display='';
   }, 2200);
 }
 function saveScan(){
-  toast('已归档 12 项指标，3 项异常已标记');
+  // 从确认表读取实际数值，统计归档项数
+  var rows = document.querySelectorAll('#scan-step2 .ct-row');
+  var count = 0;
+  rows.forEach(function(row){
+    var v = row.querySelector('input').value.trim();
+    if(v !== '') count++;
+  });
+  toast('已归档 ' + count + ' 项指标，异常项已标记');
+  var myToken = scanToken;
   setTimeout(function(){
+    if(myToken !== scanToken) return;
     stack = [scanFrom];
     showScreen(scanFrom);
     document.querySelectorAll('.tab').forEach(function(b){
@@ -2250,11 +2288,20 @@ function saveScan(){
 
 // ============ 饮食拍照流程 ============
 var dietFrom = 'diet';
+var dietToken = 0;
 function startDietAdd(){
   dietFrom = stack.length ? stack[stack.length-1] : 'diet';
+  dietToken++;
   stack.push('dietadd');
   showScreen('dietadd');
-  // 重置流程状态，防止上次残留
+  resetDietFlow();
+}
+function dietRetake(){
+  dietToken++;
+  resetDietFlow();
+}
+function resetDietFlow(){
+  // 完整重置流程状态：步骤、OCR标记、餐次、标签、备注
   document.getElementById('diet-step1').style.display='';
   document.getElementById('diet-step2').style.display='none';
   document.getElementById('diet-ocr').classList.remove('on');
@@ -2262,20 +2309,20 @@ function startDietAdd(){
   var segBtns = document.querySelectorAll('#diet-meal-seg button');
   segBtns.forEach(function(b){ b.classList.remove('on'); });
   if(segBtns[1]) segBtns[1].classList.add('on');
+  document.querySelectorAll('#diet-step2 .diet-chip').forEach(function(c){ c.classList.remove('on'); });
+  document.getElementById('diet-note').value = '';
 }
 function doDietScan(){
+  var myToken = dietToken;
   var ocr = document.getElementById('diet-ocr');
   ocr.classList.add('on');
   document.getElementById('diet-step3').classList.add('done');
   setTimeout(function(){
+    if(myToken !== dietToken) return;
     ocr.classList.remove('on');
     document.getElementById('diet-step1').style.display='none';
     document.getElementById('diet-step2').style.display='';
   }, 1800);
-}
-function dietRetake(){
-  document.getElementById('diet-step1').style.display='';
-  document.getElementById('diet-step2').style.display='none';
 }
 function dietMeal(el){
   el.parentElement.querySelectorAll('button').forEach(function(b){ b.classList.remove('on'); });
@@ -2292,20 +2339,32 @@ function saveDiet(){
     var isWarn = (t==='低脂'||t==='低嘌呤');
     return '<span class="tag'+(isWarn?' warn-tag':'')+'">'+t+'</span>';
   }).join('');
-  // 替换晚餐占位卡为真实记录
-  var d = document.getElementById('diet-dinner');
-  d.style.opacity = '1';
-  d.innerHTML =
-    '<div class="meal-photo" style="background:linear-gradient(150deg,#B96B4E,#8A4028)"><span>'+meal+'</span></div>'+
-    '<div class="meal-info">'+
-      '<div class="m-head"><span class="m-name">红烧肉饭</span><span class="m-time num">'+nowTime()+'</span></div>'+
-      '<div class="m-note">'+note+'</div>'+
-      '<div class="m-tags">'+tagsHtml+'</div>'+
-    '</div>';
-  // 更新统计
-  document.querySelector('#screen-diet .sub').textContent = '8 月 24 日 · 已记录 3 餐';
+  // 按餐次更新对应卡片
+  var map = {'早餐':'diet-breakfast','午餐':'diet-lunch','晚餐':'diet-dinner','加餐':'diet-dinner'};
+  var targetId = map[meal] || 'diet-dinner';
+  var target = document.getElementById(targetId);
+  var photoBg = {'早餐':'linear-gradient(150deg,#E8B45A,#C97B2D)','午餐':'linear-gradient(150deg,#B96B4E,#8A4028)','晚餐':'linear-gradient(150deg,#6B7F5E,#4A5C40)','加餐':'linear-gradient(150deg,#9AA7C9,#6B7BA6)'}[meal] || 'linear-gradient(150deg,#B96B4E,#8A4028)';
+  if(target){
+    target.style.opacity = '1';
+    target.innerHTML =
+      '<div class="meal-photo" style="background:'+photoBg+'"><span>'+meal+'</span></div>'+
+      '<div class="meal-info">'+
+        '<div class="m-head"><span class="m-name">红烧肉饭</span><span class="m-time num">'+nowTime()+'</span></div>'+
+        '<div class="m-note">'+note+'</div>'+
+        '<div class="m-tags">'+tagsHtml+'</div>'+
+      '</div>';
+  }
+  // 动态更新已记录餐数（recorded 已包含本次更新的卡片）
+  var recorded = 0;
+  ['diet-breakfast','diet-lunch','diet-dinner'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(el && el.style.opacity === '1') recorded++;
+  });
+  document.querySelector('#screen-diet .sub').textContent = '8 月 24 日 · 已记录 ' + recorded + ' 餐';
   toast('已记录'+meal+' · 红烧肉饭');
+  var myToken = dietToken;
   setTimeout(function(){
+    if(myToken !== dietToken) return;
     stack = [dietFrom];
     showScreen(dietFrom);
     document.querySelectorAll('.tab').forEach(function(b){
@@ -2344,16 +2403,83 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   });
   document.getElementById('diet-note').setAttribute('aria-label','饮食备注');
+  // 对比汇总动态计算
+  calcCompareSummary();
+  // 键盘可达性：非原生可点击元素补 role/tabindex/键盘处理
+  document.querySelectorAll('.set-row, .compare-entry, .alert-banner, .cond-opt, .todo.reminder-entry').forEach(function(el){
+    if(el.tagName !== 'BUTTON' && el.tagName !== 'A'){
+      el.setAttribute('role','button');
+      el.setAttribute('tabindex','0');
+      el.addEventListener('keydown', function(e){
+        if(e.key==='Enter' || e.key===' '){ e.preventDefault(); el.click(); }
+      });
+    }
+  });
 });
+function calcCompareSummary(){
+  var better=0, worse=0, flat=0, total=0;
+  document.querySelectorAll('#page-compare .cmp-row').forEach(function(row){
+    var badge = row.querySelector('.badge');
+    total++;
+    if(!badge) return;
+    var t = badge.textContent;
+    if(t.indexOf('改善')>=0) better++;
+    else if(t.indexOf('恶化')>=0) worse++;
+    else flat++;
+  });
+  var sb=document.getElementById('sum-better'), sw=document.getElementById('sum-worse'), sf=document.getElementById('sum-flat'), st=document.getElementById('sum-total');
+  if(sb) sb.textContent = better;
+  if(sw) sw.textContent = worse;
+  if(sf) sf.textContent = flat;
+  if(st) st.textContent = total;
+}
 
 // ============ 新用户引导 ============
 var obGenderVal = '男';
 var obConds = ['高血压','糖尿病'];
+var obToken = 0;
+var DATA_PAGES = ['archive','report','summary','compare','family','meds','metric','diet'];
+function setDemoBanner(show){
+  DATA_PAGES.forEach(function(k){
+    var page = document.querySelector('#screen-'+k+' .page');
+    if(!page) return;
+    var old = page.querySelector('.demo-banner');
+    if(show && !old){
+      var b = document.createElement('div');
+      b.className = 'demo-banner';
+      b.textContent = '以下为演示数据，仅用于体验界面，不是您的真实档案';
+      page.insertBefore(b, page.firstChild);
+    }else if(!show && old){
+      old.remove();
+    }
+  });
+}
 
 function obNext(toStep){
   for(var i=1;i<=4;i++){
     document.getElementById('ob-step'+i).style.display = (i===toStep) ? '' : 'none';
   }
+}
+function obPhoneNext(){
+  var phone = document.getElementById('ob-phone').value.trim();
+  if(!/^1[3-9]\d{9}$/.test(phone)){
+    toast('请输入正确的 11 位手机号');
+    return;
+  }
+  obNext(3);
+}
+function obWechatNext(){
+  toast('原型演示：微信授权登录');
+  obNext(3);
+}
+function obInfoNext(){
+  var name = document.getElementById('ob-name').value.trim();
+  var year = parseInt(document.getElementById('ob-year').value, 10);
+  var height = parseInt(document.getElementById('ob-height').value, 10);
+  if(!name){ toast('请填写称呼'); return; }
+  if(isNaN(year) || year < 1920 || year > 2020){ toast('请填写正确的出生年份（1920-2020）'); return; }
+  if(isNaN(height) || height < 120 || height > 220){ toast('请填写正确的身高（120-220 厘米）'); return; }
+  obNext(4);
 }
 function obGender(el, v){
   el.parentElement.querySelectorAll('.ob-gender').forEach(function(b){ b.classList.remove('on'); });
@@ -2367,6 +2493,8 @@ function obCond(el){
   else { obConds.push(c); el.classList.add('on'); }
 }
 function finishOnboarding(){
+  obToken++;
+  var myToken = obToken;
   var name = (document.getElementById('ob-name').value || '').trim() || '新用户';
   var year = document.getElementById('ob-year').value;
   var height = document.getElementById('ob-height').value;
@@ -2382,6 +2510,7 @@ function finishOnboarding(){
   applyUserMode(user);
   toast('档案已创建，欢迎使用康福');
   setTimeout(function(){
+    if(myToken !== obToken) return;
     stack = ['home'];
     showScreen('home');
     document.querySelectorAll('.tab').forEach(function(b){
@@ -2415,12 +2544,14 @@ function applyUserMode(user){
   var conds = document.getElementById('mine-profile-conditions');
   if(conds){
     if(isNew){
-      var tags = (user.conditions||[]).map(function(c){ return '<span class="tag">'+c+'</span>'; }).join('');
+      var tags = (user.conditions||[]).map(function(c){ return '<span class="tag">'+esc(c)+'</span>'; }).join('');
       conds.innerHTML = tags || '<span class="tag flat-tag">未选择关注项</span>';
     }else{
       conds.innerHTML = '<span class="tag">高血压</span><span class="tag">2 型糖尿病</span><span class="tag">血脂异常</span><span class="tag">高尿酸</span><span class="tag warn-tag">脂肪肝</span>';
     }
   }
+  // 数据页演示标注：非演示模式明确提示当前为演示数据，避免与本人档案错配
+  setDemoBanner(isNew);
   // 首页指标与横幅
   if(isNew){
     var vals = document.querySelectorAll('#page-home .m-value');
@@ -2465,7 +2596,7 @@ function applyUserMode(user){
   }
 }
 function switchUser(){
-  try { localStorage.removeItem('kangfu_user'); } catch(e){}
+  // 不提前删除旧档案；建档完成时才会覆盖存档
   obConds = ['高血压','糖尿病'];
   obGenderVal = '男';
   document.getElementById('ob-phone').value = '';
@@ -2489,11 +2620,15 @@ function switchUser(){
 // ============ 启动检测 ============
 (function(){
   var saved = null;
-  try { saved = JSON.parse(localStorage.getItem('kangfu_user') || 'null'); } catch(e){}
-  if(saved && saved.mode){
+  try { saved = JSON.parse(localStorage.getItem('kangfu_user') || 'null'); } catch(e){ saved = null; }
+  // 存档校验：必须含合法 mode/name；损坏或旧版则清除并进入引导
+  if(saved && saved.mode && (saved.mode==='demo' || saved.mode==='new') && typeof saved.name === 'string' && saved.name.length > 0){
+    if(saved.mode==='new' && (!saved.conditions || !Array.isArray(saved.conditions))){
+      saved.conditions = [];
+    }
     applyUserMode(saved);
   }else{
-    // 首次启动：显示引导
+    try { localStorage.removeItem('kangfu_user'); } catch(e){}
     applyUserMode({mode:'demo', name:'张卫东'});
     stack = ['onboard'];
     showScreen('onboard');
