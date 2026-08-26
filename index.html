@@ -381,6 +381,23 @@ body{
 }
 .textarea-note:focus{outline:2px solid var(--teal-600);border-color:var(--teal-600);background:#fff}
 
+/* 新用户引导 */
+.ob-logo{
+  width:84px;height:84px;border-radius:24px;
+  background:linear-gradient(150deg,var(--teal-600) 0%,var(--teal-900) 100%);
+  display:flex;align-items:center;justify-content:center;color:#fff;
+  box-shadow:0 10px 30px rgba(15,118,110,.35);
+}
+.ob-logo svg{width:42px;height:42px}
+.ob-gender{
+  flex:1;border:1.5px solid var(--line);border-radius:12px;padding:13px;
+  background:var(--surface);font-size:16px;font-weight:700;color:var(--ink-2);
+  cursor:pointer;font-family:var(--font);
+}
+.ob-gender.on{border-color:var(--teal-600);background:var(--teal-50);color:var(--teal-700)}
+.ob-gender:active{transform:scale(.98)}
+.ob-step input:focus{outline:2px solid var(--teal-600);border-color:var(--teal-600);background:#fff}
+
 /* 拍照流程 */
 .camera-view{
   aspect-ratio:3/4;border-radius:20px;overflow:hidden;position:relative;
@@ -653,7 +670,7 @@ input::placeholder{color:#5F746F;opacity:1}
       </div>
 
       <!-- 预警横幅 -->
-      <div class="alert-banner" onclick="go('page-archive')">
+      <div class="alert-banner" id="home-alert" onclick="go('page-archive')">
         <span class="a-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4M12 17.5v.5"/></svg></span>
         <div>
           <div class="a-title">本月报告有 3 项指标超出参考范围</div>
@@ -1486,6 +1503,11 @@ input::placeholder{color:#5F746F;opacity:1}
           <div class="s-main">预警与阈值</div>
           <span class="s-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></span>
         </div>
+        <div class="set-row" onclick="switchUser()" id="switch-user-row">
+          <span class="s-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></span>
+          <div class="s-main">切换用户<div class="s-sub">退出当前档案，重新体验注册流程</div></div>
+          <span class="s-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></span>
+        </div>
         <div class="set-row devices-entry" onclick="go('page-devices')">
           <span class="s-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3h8v18H8z"/><path d="M10 6h4M11 18h2"/></svg></span>
           <div class="s-main">数据与设备<div class="s-sub">2 个数据源已连接</div></div>
@@ -1910,6 +1932,90 @@ input::placeholder{color:#5F746F;opacity:1}
     </div>
   </div>
 
+  <!-- ============ 新用户引导（首次启动） ============ -->
+  <div class="screen" id="screen-onboard" style="display:none">
+    <div class="page on" id="page-onboard">
+      <!-- 步骤1：欢迎 -->
+      <div id="ob-step1" class="ob-step">
+        <div style="display:flex;flex-direction:column;align-items:center;padding-top:70px">
+          <div class="ob-logo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2-5 3 10 2-7 1.5 2H21"/></svg>
+          </div>
+          <h1 style="font-size:30px;font-weight:800;margin-top:20px;letter-spacing:.02em">康福</h1>
+          <div style="font-size:15px;color:var(--ink-2);margin-top:8px;text-align:center;line-height:1.7">把散落的检验报告、病历和日常数据<br>放在一起，看懂自己的健康变化</div>
+          <div style="width:100%;margin-top:44px">
+            <button class="btn-primary" onclick="obNext(2)">开始使用</button>
+            <button class="btn-ghost" style="margin-top:12px" onclick="enterDemo()">先看演示数据</button>
+          </div>
+          <div style="font-size:11.5px;color:var(--ink-3);margin-top:22px;text-align:center;line-height:1.7">数据仅保存在设备与加密云端，不作他用<br>本应用为健康档案工具，不提供诊断和治疗建议</div>
+        </div>
+      </div>
+
+      <!-- 步骤2：登录 -->
+      <div id="ob-step2" class="ob-step" style="display:none">
+        <div style="padding-top:50px">
+          <h2 style="font-size:24px;font-weight:800">登录 / 注册</h2>
+          <div style="font-size:13.5px;color:var(--ink-2);margin-top:6px">手机号登录，方便家人共享档案</div>
+          <div style="margin-top:28px">
+            <div style="font-size:13px;font-weight:700;color:var(--ink-2);margin-bottom:8px">手机号</div>
+            <input id="ob-phone" type="tel" inputmode="numeric" maxlength="11" placeholder="请输入 11 位手机号" style="width:100%;border:1.5px solid var(--line);border-radius:12px;padding:14px;font-size:17px;font-family:var(--font);background:var(--surface);color:var(--ink);letter-spacing:.03em">
+            <button class="btn-primary" style="margin-top:16px" onclick="obNext(3)">获取验证码</button>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:20px;align-items:center">
+            <div style="flex:1;height:1px;background:var(--line)"></div>
+            <span style="font-size:12px;color:var(--ink-3)">或</span>
+            <div style="flex:1;height:1px;background:var(--line)"></div>
+          </div>
+          <button class="btn-ghost" style="margin-top:20px" onclick="obNext(2)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-3.16 19.5c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.9 1.53 2.35 1.09 2.92.83.09-.65.35-1.09.64-1.34-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02a9.6 9.6 0 0 1 5 0c1.91-1.3 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.6 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2z"/></svg>
+            微信一键登录
+          </button>
+        </div>
+      </div>
+
+      <!-- 步骤3：基本信息 -->
+      <div id="ob-step3" class="ob-step" style="display:none">
+        <div class="step-dots"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div>
+        <div style="padding-top:8px">
+          <h2 style="font-size:24px;font-weight:800">基本信息</h2>
+          <div style="font-size:13.5px;color:var(--ink-2);margin-top:6px">用于指标参考范围的判断</div>
+          <div style="margin-top:24px">
+            <div style="font-size:13px;font-weight:700;color:var(--ink-2);margin-bottom:8px">怎么称呼您</div>
+            <input id="ob-name" type="text" maxlength="10" placeholder="例如：王阿姨" style="width:100%;border:1.5px solid var(--line);border-radius:12px;padding:14px;font-size:17px;font-family:var(--font);background:var(--surface);color:var(--ink)">
+            <div style="font-size:13px;font-weight:700;color:var(--ink-2);margin:20px 0 8px">性别</div>
+            <div style="display:flex;gap:10px">
+              <button class="ob-gender on" onclick="obGender(this,'男')">男</button>
+              <button class="ob-gender" onclick="obGender(this,'女')">女</button>
+            </div>
+            <div style="font-size:13px;font-weight:700;color:var(--ink-2);margin:20px 0 8px">出生年份</div>
+            <input id="ob-year" type="number" inputmode="numeric" maxlength="4" placeholder="例如：1965" style="width:100%;border:1.5px solid var(--line);border-radius:12px;padding:14px;font-size:17px;font-family:var(--font);background:var(--surface);color:var(--ink);font-variant-numeric:tabular-nums">
+            <div style="font-size:13px;font-weight:700;color:var(--ink-2);margin:20px 0 8px">身高（厘米）</div>
+            <input id="ob-height" type="number" inputmode="numeric" maxlength="3" placeholder="例如：165" style="width:100%;border:1.5px solid var(--line);border-radius:12px;padding:14px;font-size:17px;font-family:var(--font);background:var(--surface);color:var(--ink);font-variant-numeric:tabular-nums">
+            <button class="btn-primary" style="margin-top:26px" onclick="obNext(4)">下一步</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 步骤4：病种选择 -->
+      <div id="ob-step4" class="ob-step" style="display:none">
+        <div class="step-dots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></div>
+        <div style="padding-top:8px">
+          <h2 style="font-size:24px;font-weight:800">关注哪些健康问题？</h2>
+          <div style="font-size:13.5px;color:var(--ink-2);margin-top:6px">可多选，之后可随时修改</div>
+          <div class="cond-grid" style="margin-top:20px">
+            <div class="cond-opt on" data-cond="高血压" onclick="obCond(this)"><span>高血压</span><span class="c-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6.5"/></svg></span></div>
+            <div class="cond-opt on" data-cond="糖尿病" onclick="obCond(this)"><span>糖尿病</span><span class="c-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6.5"/></svg></span></div>
+            <div class="cond-opt" data-cond="血脂异常" onclick="obCond(this)"><span>血脂异常</span><span class="c-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6.5"/></svg></span></div>
+            <div class="cond-opt" data-cond="高尿酸" onclick="obCond(this)"><span>高尿酸</span><span class="c-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6.5"/></svg></span></div>
+            <div class="cond-opt" data-cond="脂肪肝" onclick="obCond(this)"><span>脂肪肝</span><span class="c-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6.5"/></svg></span></div>
+          </div>
+          <button class="btn-primary" style="margin-top:28px" onclick="finishOnboarding()">完成，进入康福</button>
+          <div style="font-size:11.5px;color:var(--ink-3);margin-top:12px;text-align:center">用药信息可在首页"用药提醒"中随时添加</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- 底部导航 -->
   <div class="tabbar">
     <button class="tab on" data-tab="home" onclick="switchTab('home')">
@@ -1946,7 +2052,7 @@ var screens = {
   dietadd:'screen-dietadd', reportdetail:'screen-reportdetail',
   insight:'screen-insight', previsit:'screen-previsit', summary:'screen-summary',
   reminder:'screen-reminder', family:'screen-family', subscribe:'screen-subscribe',
-  devices:'screen-devices'
+  devices:'screen-devices', onboard:'screen-onboard'
 };
 var stack = ['home'];
 
@@ -2228,6 +2334,161 @@ document.addEventListener('DOMContentLoaded', function(){
   });
   document.getElementById('diet-note').setAttribute('aria-label','饮食备注');
 });
+
+// ============ 新用户引导 ============
+var obGenderVal = '男';
+var obConds = ['高血压','糖尿病'];
+
+function obNext(toStep){
+  for(var i=1;i<=4;i++){
+    document.getElementById('ob-step'+i).style.display = (i===toStep) ? '' : 'none';
+  }
+}
+function obGender(el, v){
+  el.parentElement.querySelectorAll('.ob-gender').forEach(function(b){ b.classList.remove('on'); });
+  el.classList.add('on');
+  obGenderVal = v;
+}
+function obCond(el){
+  var c = el.getAttribute('data-cond');
+  var idx = obConds.indexOf(c);
+  if(idx >= 0){ obConds.splice(idx,1); el.classList.remove('on'); }
+  else { obConds.push(c); el.classList.add('on'); }
+}
+function finishOnboarding(){
+  var name = (document.getElementById('ob-name').value || '').trim() || '新用户';
+  var year = document.getElementById('ob-year').value;
+  var height = document.getElementById('ob-height').value;
+  var user = {
+    mode: 'new',
+    name: name,
+    gender: obGenderVal,
+    year: year,
+    height: height,
+    conditions: obConds
+  };
+  try { localStorage.setItem('kangfu_user', JSON.stringify(user)); } catch(e){}
+  applyUserMode(user);
+  toast('档案已创建，欢迎使用康福');
+  setTimeout(function(){
+    stack = ['home'];
+    showScreen('home');
+    document.querySelectorAll('.tab').forEach(function(b){
+      b.classList.toggle('on', b.getAttribute('data-tab')==='home');
+    });
+  }, 800);
+}
+function enterDemo(){
+  var user = { mode:'demo', name:'张卫东' };
+  try { localStorage.setItem('kangfu_user', JSON.stringify(user)); } catch(e){}
+  applyUserMode(user);
+  stack = ['home'];
+  showScreen('home');
+  document.querySelectorAll('.tab').forEach(function(b){
+    b.classList.toggle('on', b.getAttribute('data-tab')==='home');
+  });
+  toast('已进入演示数据模式');
+}
+function applyUserMode(user){
+  var isNew = user.mode === 'new';
+  // 顶部用户名
+  var hm = document.getElementById('home-member-name');
+  if(hm) hm.textContent = isNew ? user.name : '张卫东';
+  // 我的页档案
+  var av = document.querySelector('#page-mine .avatar');
+  if(av) av.textContent = isNew ? user.name.charAt(0) : '张';
+  var meta = document.getElementById('mine-profile-meta');
+  if(meta) meta.textContent = isNew
+    ? (user.gender||'') + (user.year ? ' · '+user.year+' 年生' : '') + (user.height ? ' · '+user.height+' cm' : '')
+    : '57 岁 · 男 · 172 cm · 72.5 kg';
+  var conds = document.getElementById('mine-profile-conditions');
+  if(conds){
+    if(isNew){
+      var tags = (user.conditions||[]).map(function(c){ return '<span class="tag">'+c+'</span>'; }).join('');
+      conds.innerHTML = tags || '<span class="tag flat-tag">未选择关注项</span>';
+    }else{
+      conds.innerHTML = '<span class="tag">高血压</span><span class="tag">2 型糖尿病</span><span class="tag">血脂异常</span><span class="tag">高尿酸</span><span class="tag warn-tag">脂肪肝</span>';
+    }
+  }
+  // 首页指标与横幅
+  if(isNew){
+    var vals = document.querySelectorAll('#page-home .m-value');
+    vals.forEach(function(v){ v.innerHTML = '--<span class="m-unit">暂无数据</span>'; });
+    document.querySelectorAll('#page-home .m-trend').forEach(function(t){ t.textContent = '上传化验单后显示'; });
+    var alert = document.getElementById('home-alert');
+    if(alert){
+      alert.className = 'alert-banner';
+      alert.style.background = 'var(--teal-50)';
+      alert.style.borderColor = 'var(--teal-100)';
+      alert.innerHTML = '<span class="a-icon" style="color:var(--teal-700)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></span>'+
+        '<div><div class="a-title" style="color:var(--teal-900)">欢迎使用康福</div>'+
+        '<div class="a-sub" style="color:var(--teal-700)">拍下你的第一张检验报告，自动归档并看懂指标</div></div>';
+    }
+    // 待办卡标题
+    var todoTitle = document.querySelector('#page-home .card .card-title');
+    if(todoTitle) todoTitle.innerHTML = '开始建档 <span class="more" onclick="go(\'page-mine\')">管理</span>';
+    var switchRow = document.getElementById('switch-user-row');
+    if(switchRow) switchRow.querySelector('.s-main').innerHTML = '切换用户<div class="s-sub">退出当前档案，重新体验注册流程</div>';
+  }else{
+    // 恢复演示数据
+    var vals2 = document.querySelectorAll('#page-home .m-value');
+    var demoVals = ['138<span class="m-unit">/86</span>','6.8<span class="m-unit">mmol/L</span>','72.5<span class="m-unit">kg</span>'];
+    vals2.forEach(function(v,i){ if(demoVals[i]) v.innerHTML = demoVals[i]; });
+    document.querySelectorAll('#page-home .m-trend').forEach(function(t,i){
+      var ts = ['mmHg · 偏高','较上周 -0.3','BMI 24.6 · 超重'];
+      if(ts[i]) t.textContent = ts[i];
+    });
+    var alert2 = document.getElementById('home-alert');
+    if(alert2){
+      alert2.className = 'alert-banner';
+      alert2.style.background = '';
+      alert2.style.borderColor = '';
+      alert2.innerHTML = '<span class="a-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4M12 17.5v.5"/></svg></span>'+
+        '<div><div class="a-title">本月报告有 3 项指标超出参考范围</div>'+
+        '<div class="a-sub">低密度脂蛋白 3.7↑ ｜ 尿酸 445↑ ｜ 谷丙转氨酶 52↑，点击查看详情</div></div>';
+    }
+    var todoTitle2 = document.querySelector('#page-home .card .card-title');
+    if(todoTitle2) todoTitle2.innerHTML = '今日待办 <span class="more" onclick="go(\'page-meds\')">管理</span>';
+    var switchRow2 = document.getElementById('switch-user-row');
+    if(switchRow2) switchRow2.querySelector('.s-main').innerHTML = '切换用户<div class="s-sub">退出当前档案，重新体验注册流程</div>';
+  }
+}
+function switchUser(){
+  try { localStorage.removeItem('kangfu_user'); } catch(e){}
+  obConds = ['高血压','糖尿病'];
+  obGenderVal = '男';
+  document.getElementById('ob-phone').value = '';
+  document.getElementById('ob-name').value = '';
+  document.getElementById('ob-year').value = '';
+  document.getElementById('ob-height').value = '';
+  document.querySelectorAll('.ob-gender').forEach(function(b){ b.classList.remove('on'); });
+  if(document.querySelector('.ob-gender')) document.querySelector('.ob-gender').classList.add('on');
+  document.querySelectorAll('.cond-opt').forEach(function(c){
+    var v = c.getAttribute('data-cond');
+    if(v==='高血压'||v==='糖尿病') c.classList.add('on'); else c.classList.remove('on');
+  });
+  stack.push('onboard');
+  showScreen('onboard');
+  obNext(1);
+  document.querySelectorAll('.tab').forEach(function(b){
+    b.classList.toggle('on', b.getAttribute('data-tab')==='home');
+  });
+}
+
+// ============ 启动检测 ============
+(function(){
+  var saved = null;
+  try { saved = JSON.parse(localStorage.getItem('kangfu_user') || 'null'); } catch(e){}
+  if(saved && saved.mode){
+    applyUserMode(saved);
+  }else{
+    // 首次启动：显示引导
+    applyUserMode({mode:'demo', name:'张卫东'});
+    stack = ['onboard'];
+    showScreen('onboard');
+    obNext(1);
+  }
+})();
 
 // ============ PWA Service Worker 注册 ============
 if ('serviceWorker' in navigator) {

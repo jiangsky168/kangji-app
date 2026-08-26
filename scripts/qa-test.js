@@ -10,7 +10,15 @@ const jsdomPath = require.resolve('jsdom', {
 const { JSDOM } = require(jsdomPath);
 
 const html = fs.readFileSync('慢病管理App原型.html', 'utf8');
-const dom = new JSDOM(html, { runScripts: 'dangerously', pretendToBeVisual: true });
+const dom = new JSDOM(html, {
+  runScripts: 'dangerously',
+  pretendToBeVisual: true,
+  url: 'http://localhost/',
+  beforeParse(window) {
+    // 预置演示模式，跳过首次启动引导，保证现有测试直接进首页
+    window.localStorage.setItem('kangfu_user', JSON.stringify({ mode: 'demo', name: '张卫东' }));
+  }
+});
 const doc = dom.window.document;
 const win = dom.window;
 
@@ -234,9 +242,41 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   doc.querySelector('#page-devices .btn-back').click();
   assert('数据与设备返回 -> 我的页', visible('screen-mine'));
 
-  console.log('=== 18. JS运行时错误 ===');
+  console.log('=== 10. JS运行时错误 ===');
   assert('无未捕获错误', errors.length === 0);
   if (errors.length) console.log('   错误:', errors.slice(0, 5));
+
+  console.log('=== 11. 新用户引导流程 ===');
+  // 清除存档模拟首次启动
+  win.localStorage.removeItem('kangfu_user');
+  win.location.reload = () => {};
+  // 直接调用切换用户回到引导
+  doc.querySelector('#switch-user-row') ? null : null;
+  // 从我的页触发切换用户
+  stackReset();
+  win.eval('switchUser()');
+  assert('切换用户 -> 引导页显示', visible('screen-onboard'));
+  assert('引导步骤1(欢迎)可见', doc.getElementById('ob-step1').style.display !== 'none');
+  doc.querySelector('#ob-step1 .btn-primary').click();
+  assert('步骤2(登录)显示', doc.getElementById('ob-step2').style.display !== 'none');
+  doc.getElementById('ob-phone').value = '13800138000';
+  doc.querySelector('#ob-step2 .btn-primary').click();
+  assert('步骤3(基本信息)显示', doc.getElementById('ob-step3').style.display !== 'none');
+  doc.getElementById('ob-name').value = '王秀兰';
+  doc.getElementById('ob-year').value = '1960';
+  doc.getElementById('ob-height').value = '160';
+  doc.querySelector('#ob-step3 .btn-primary').click();
+  assert('步骤4(病种选择)显示', doc.getElementById('ob-step4').style.display !== 'none');
+  // 取消一个病种再完成
+  doc.querySelector('#ob-step4 .cond-opt[data-cond="糖尿病"]').click();
+  doc.querySelector('#ob-step4 .btn-primary').click();
+  await sleep(1000);
+  assert('建档完成进入首页', visible('screen-home'));
+  assert('首页显示新用户名', doc.getElementById('home-member-name').textContent === '王秀兰');
+  assert('首页指标为空状态', doc.querySelectorAll('#page-home .m-value')[0].textContent.indexOf('--') === 0);
+  assert('我的页档案已更新', doc.getElementById('mine-profile-meta').textContent.indexOf('王秀兰') >= 0 || doc.getElementById('mine-profile-meta').textContent.indexOf('1960') >= 0);
+
+  function stackReset(){ win.eval('stack=["home"];'); }
 
   console.log(`\n结果: ${pass} 通过, ${fail} 失败`);
   process.exit(fail ? 1 : 0);
