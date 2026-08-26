@@ -2369,8 +2369,18 @@ function saveDiet(){
       target.id = 'diet-snack';
       target.style.marginTop = '12px';
       target.setAttribute('data-recorded','1');
+      // 插到晚餐卡之后、统计卡之前
       var dinner = document.getElementById('diet-dinner');
-      if(dinner && dinner.parentNode) dinner.parentNode.appendChild(target);
+      var statCard = null;
+      // 找统计卡：晚餐卡后面的下一个 card 兄弟
+      if(dinner && dinner.nextElementSibling && dinner.nextElementSibling.classList && dinner.nextElementSibling.classList.contains('card')){
+        statCard = dinner.nextElementSibling;
+      }
+      if(statCard && statCard.parentNode){
+        statCard.parentNode.insertBefore(target, statCard);
+      }else if(dinner && dinner.parentNode){
+        dinner.parentNode.appendChild(target);
+      }
     }
   }else{
     var map = {'早餐':'diet-breakfast','午餐':'diet-lunch','晚餐':'diet-dinner'};
@@ -2648,7 +2658,8 @@ function switchUser(){
   if(document.querySelector('.ob-gender')) document.querySelector('.ob-gender').classList.add('on');
   document.querySelectorAll('.cond-opt').forEach(function(c){
     var v = c.getAttribute('data-cond');
-    if(v==='高血压'||v==='糖尿病') c.classList.add('on'); else c.classList.remove('on');
+    if(v==='高血压'||v==='糖尿病'){ c.classList.add('on'); c.setAttribute('aria-pressed','true'); }
+    else { c.classList.remove('on'); c.setAttribute('aria-pressed','false'); }
   });
   stack.push('onboard');
   showScreen('onboard');

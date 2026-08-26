@@ -328,10 +328,25 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   win.eval('stack=["home"]; showScreen("home"); startDietAdd(); saveDiet(); switchTab("report");');
   await sleep(1200);
   assert('导航后旧保存定时器被取消(停在周报)', visible('screen-report'));
-  // 餐数统计基于 data-recorded
+  // 餐数统计基于 data-recorded：初始2餐+加餐后应为3餐
   doc.querySelector('.tabbar .tab[data-tab="diet"]').click();
+  // 先加餐：从首页进入饮食流程选加餐保存
+  doc.querySelector('.tabbar .tab[data-tab="home"]').click();
+  win.eval('startDietAdd(); var bs=document.querySelectorAll("#diet-meal-seg button"); bs.forEach(function(b){b.classList.remove("on");}); bs[bs.length-1].classList.add("on"); saveDiet(); switchTab("diet");');
+  await sleep(1200);
   var mealText = doc.querySelector('#screen-diet .sub').textContent;
-  assert('餐数统计正确(≥2餐)', mealText.indexOf('已记录 3 餐') >= 0 || mealText.indexOf('已记录 2 餐') >= 0 || mealText.indexOf('已记录 1 餐') >= 0);
+  assert('加餐后餐数=3', mealText.indexOf('已记录 3 餐') >= 0);
+  // 加餐卡在晚餐卡之后、统计卡之前
+  var snack = doc.getElementById('diet-snack');
+  assert('加餐卡存在', !!snack);
+  var dinner2 = doc.getElementById('diet-dinner');
+  assert('加餐卡紧接晚餐卡之后', dinner2 && snack && dinner2.nextElementSibling === snack);
+  // aria-pressed 重置：再进引导检查
+  win.eval('switchUser()');
+  var condStates = [];
+  doc.querySelectorAll('#ob-step4 .cond-opt').forEach(function(c){ condStates.push(c.getAttribute('aria-pressed')); });
+  assert('重置后aria-pressed同步(高血糖糖尿病=true)', condStates[0]==='true' && condStates[1]==='true' && condStates[2]==='false');
+  win.eval('enterDemo()');
   // 重拍恢复初始值：改一个值再重拍
   doc.querySelector('.tabbar .tab[data-tab="home"]').click();
   doc.querySelector('#page-home .btn-primary').click();
