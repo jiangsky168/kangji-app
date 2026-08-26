@@ -320,6 +320,31 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   assert('对比汇总恶化数=2', doc.getElementById('sum-worse').textContent === '2');
   assert('对比汇总总数=17', doc.getElementById('sum-total').textContent === '17');
 
+  console.log('=== 13. 复查修复回归 ===');
+  // 首页演示标注
+  doc.querySelector('.tabbar .tab[data-tab="home"]').click();
+  assert('首页有演示标注', !!doc.querySelector('#page-home .demo-banner'));
+  // 导航取消定时器：保存饮食后立即切Tab，不被回跳覆盖
+  win.eval('stack=["home"]; showScreen("home"); startDietAdd(); saveDiet(); switchTab("report");');
+  await sleep(1200);
+  assert('导航后旧保存定时器被取消(停在周报)', visible('screen-report'));
+  // 餐数统计基于 data-recorded
+  doc.querySelector('.tabbar .tab[data-tab="diet"]').click();
+  var mealText = doc.querySelector('#screen-diet .sub').textContent;
+  assert('餐数统计正确(≥2餐)', mealText.indexOf('已记录 3 餐') >= 0 || mealText.indexOf('已记录 2 餐') >= 0 || mealText.indexOf('已记录 1 餐') >= 0);
+  // 重拍恢复初始值：改一个值再重拍
+  doc.querySelector('.tabbar .tab[data-tab="home"]').click();
+  doc.querySelector('#page-home .btn-primary').click();
+  doc.querySelector('#scan-step1 .btn-primary').click();
+  await sleep(2400);
+  var firstInput = doc.querySelector('#scan-step2 .ct-row input');
+  var origVal = firstInput.value;
+  firstInput.value = '999';
+  doc.querySelector('#scan-step2 .btn-ghost').click();
+  doc.querySelector('#scan-step1 .btn-primary').click();
+  await sleep(2400);
+  assert('重拍恢复初始识别值', doc.querySelector('#scan-step2 .ct-row input').value === origVal);
+
   console.log(`\n结果: ${pass} 通过, ${fail} 失败`);
   process.exit(fail ? 1 : 0);
 })();

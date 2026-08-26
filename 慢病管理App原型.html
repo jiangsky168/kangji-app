@@ -1262,7 +1262,7 @@ input::placeholder{color:#5F746F;opacity:1}
         <button class="pill" onclick="pill(this)">护肝</button>
       </div>
 
-      <div class="card meal-card" id="diet-breakfast">
+      <div class="card meal-card" id="diet-breakfast" data-recorded="1">
         <div class="meal-photo" style="background:linear-gradient(150deg,#E8B45A,#C97B2D)">
           <span>早餐</span>
         </div>
@@ -1276,7 +1276,7 @@ input::placeholder{color:#5F746F;opacity:1}
         </div>
       </div>
 
-      <div class="card meal-card" style="margin-top:12px" id="diet-lunch">
+      <div class="card meal-card" style="margin-top:12px" id="diet-lunch" data-recorded="1">
         <div class="meal-photo" style="background:linear-gradient(150deg,#B96B4E,#8A4028)">
           <span>午餐</span>
         </div>
@@ -1290,7 +1290,7 @@ input::placeholder{color:#5F746F;opacity:1}
         </div>
       </div>
 
-      <div class="card meal-card" style="margin-top:12px;opacity:.55" id="diet-dinner">
+      <div class="card meal-card" style="margin-top:12px;opacity:.55" id="diet-dinner" data-recorded="0">
         <div class="meal-photo" style="background:linear-gradient(150deg,#D8D2C2,#A8A08C)">
           <span>晚餐</span>
         </div>
@@ -2083,18 +2083,25 @@ function showScreen(id){
   var tb = document.querySelector('.tabbar');
   if(tb) tb.style.display = (id==='onboard') ? 'none' : '';
 }
+function cancelFlows(){
+  // 任何导航/离开流程时，失效所有异步定时器（OCR/饮食/建档）
+  scanToken++; dietToken++; obToken++;
+}
 function go(id){
   // 兼容 'page-xxx' 与短名两种调用形式
   id = String(id).replace(/^page-/,'');
+  cancelFlows();
   stack.push(id);
   showScreen(id);
 }
 function back(){
+  cancelFlows();
   stack.pop();
   if(stack.length===0) stack=['home'];
   showScreen(stack[stack.length-1]);
 }
 function switchTab(tab){
+  cancelFlows();
   stack = [tab];
   showScreen(tab);
   document.querySelectorAll('.tab').forEach(function(b){
@@ -2221,8 +2228,15 @@ function toggleDevice(el, name){
   var state = row.querySelector('.device-state');
   state.textContent = on ? '已连接' : '未连接';
   state.className = 'badge device-state '+(on ? 'ok' : 'flat');
-  if(name==='Apple 健康' || name==='三诺血糖仪'){
-    row.querySelector('.device-sync').textContent = on ? '刚刚完成同步' : '同步已暂停';
+  if(name==='Apple 健康' || name==='三诺血糖仪' || name==='微信运动'){
+    var sync = row.querySelector('.device-sync');
+    if(sync){
+      if(name==='微信运动'){
+        sync.textContent = on ? '每日步数自动同步' : '同步已暂停';
+      }else{
+        sync.textContent = on ? '刚刚完成同步' : '同步已暂停';
+      }
+    }
   }
   // 同步更新"我的"页摘要
   var connected = 0;
@@ -2249,6 +2263,11 @@ function startScan(){
 }
 function resetScan(){
   scanToken++;
+  // 恢复初始识别值（丢弃本次编辑）
+  document.querySelectorAll('#scan-step2 .ct-row input').forEach(function(input){
+    var def = input.getAttribute('data-default');
+    if(def !== null) input.value = def;
+  });
   document.getElementById('scan-step1').style.display='';
   document.getElementById('scan-step2').style.display='none';
   document.getElementById('ocr-state').classList.remove('on');
@@ -2339,13 +2358,27 @@ function saveDiet(){
     var isWarn = (t==='低脂'||t==='低嘌呤');
     return '<span class="tag'+(isWarn?' warn-tag':'')+'">'+t+'</span>';
   }).join('');
-  // 按餐次更新对应卡片
-  var map = {'早餐':'diet-breakfast','午餐':'diet-lunch','晚餐':'diet-dinner','加餐':'diet-dinner'};
-  var targetId = map[meal] || 'diet-dinner';
-  var target = document.getElementById(targetId);
+  // 按餐次更新对应卡片；加餐作为独立第4张卡
+  var target = null;
   var photoBg = {'早餐':'linear-gradient(150deg,#E8B45A,#C97B2D)','午餐':'linear-gradient(150deg,#B96B4E,#8A4028)','晚餐':'linear-gradient(150deg,#6B7F5E,#4A5C40)','加餐':'linear-gradient(150deg,#9AA7C9,#6B7BA6)'}[meal] || 'linear-gradient(150deg,#B96B4E,#8A4028)';
+  if(meal === '加餐'){
+    target = document.getElementById('diet-snack');
+    if(!target){
+      target = document.createElement('div');
+      target.className = 'card meal-card';
+      target.id = 'diet-snack';
+      target.style.marginTop = '12px';
+      target.setAttribute('data-recorded','1');
+      var dinner = document.getElementById('diet-dinner');
+      if(dinner && dinner.parentNode) dinner.parentNode.appendChild(target);
+    }
+  }else{
+    var map = {'早餐':'diet-breakfast','午餐':'diet-lunch','晚餐':'diet-dinner'};
+    target = document.getElementById(map[meal] || 'diet-dinner');
+  }
   if(target){
     target.style.opacity = '1';
+    target.setAttribute('data-recorded','1');
     target.innerHTML =
       '<div class="meal-photo" style="background:'+photoBg+'"><span>'+meal+'</span></div>'+
       '<div class="meal-info">'+
@@ -2354,12 +2387,9 @@ function saveDiet(){
         '<div class="m-tags">'+tagsHtml+'</div>'+
       '</div>';
   }
-  // 动态更新已记录餐数（recorded 已包含本次更新的卡片）
+  // 动态更新已记录餐数（基于 data-recorded，不依赖 opacity）
   var recorded = 0;
-  ['diet-breakfast','diet-lunch','diet-dinner'].forEach(function(id){
-    var el = document.getElementById(id);
-    if(el && el.style.opacity === '1') recorded++;
-  });
+  document.querySelectorAll('#screen-diet .meal-card[data-recorded="1"]').forEach(function(){ recorded++; });
   document.querySelector('#screen-diet .sub').textContent = '8 月 24 日 · 已记录 ' + recorded + ' 餐';
   toast('已记录'+meal+' · 红烧肉饭');
   var myToken = dietToken;
@@ -2393,23 +2423,27 @@ function toast(msg){
 
 // ============ 表单可访问性初始化 ============
 document.addEventListener('DOMContentLoaded', function(){
-  // 化验确认表：数值输入框加数字键盘 + 名称
+  // 化验确认表：数值输入框加数字键盘 + 名称 + 初始值备份（重拍恢复用）
   document.querySelectorAll('.confirm-table .ct-row').forEach(function(row){
     var name = row.querySelector('.ct-name');
     var input = row.querySelector('input');
     if(name && input){
       input.setAttribute('inputmode','decimal');
       input.setAttribute('aria-label', name.textContent);
+      if(!input.getAttribute('data-default')) input.setAttribute('data-default', input.value);
     }
   });
   document.getElementById('diet-note').setAttribute('aria-label','饮食备注');
   // 对比汇总动态计算
   calcCompareSummary();
-  // 键盘可达性：非原生可点击元素补 role/tabindex/键盘处理
-  document.querySelectorAll('.set-row, .compare-entry, .alert-banner, .cond-opt, .todo.reminder-entry').forEach(function(el){
+  // 键盘可达性：非原生可点击元素补 role/tabindex/键盘处理（reminder-entry 已有内联处理，跳过避免双绑定）
+  document.querySelectorAll('.set-row, .compare-entry, .alert-banner, .cond-opt').forEach(function(el){
     if(el.tagName !== 'BUTTON' && el.tagName !== 'A'){
       el.setAttribute('role','button');
       el.setAttribute('tabindex','0');
+      if(el.classList.contains('cond-opt')){
+        el.setAttribute('aria-pressed', el.classList.contains('on') ? 'true' : 'false');
+      }
       el.addEventListener('keydown', function(e){
         if(e.key==='Enter' || e.key===' '){ e.preventDefault(); el.click(); }
       });
@@ -2438,7 +2472,7 @@ function calcCompareSummary(){
 var obGenderVal = '男';
 var obConds = ['高血压','糖尿病'];
 var obToken = 0;
-var DATA_PAGES = ['archive','report','summary','compare','family','meds','metric','diet'];
+var DATA_PAGES = ['home','archive','report','summary','compare','family','meds','metric','diet'];
 function setDemoBanner(show){
   DATA_PAGES.forEach(function(k){
     var page = document.querySelector('#screen-'+k+' .page');
@@ -2448,7 +2482,10 @@ function setDemoBanner(show){
       var b = document.createElement('div');
       b.className = 'demo-banner';
       b.textContent = '以下为演示数据，仅用于体验界面，不是您的真实档案';
-      page.insertBefore(b, page.firstChild);
+      // 首页插在顶栏之后，其余页面插在顶部
+      var ref = (k==='home') ? page.querySelector('.topbar') : null;
+      if(ref && ref.nextSibling) page.insertBefore(b, ref.nextSibling);
+      else page.insertBefore(b, page.firstChild);
     }else if(!show && old){
       old.remove();
     }
@@ -2474,11 +2511,15 @@ function obWechatNext(){
 }
 function obInfoNext(){
   var name = document.getElementById('ob-name').value.trim();
-  var year = parseInt(document.getElementById('ob-year').value, 10);
-  var height = parseInt(document.getElementById('ob-height').value, 10);
+  var yearRaw = document.getElementById('ob-year').value.trim();
+  var heightRaw = document.getElementById('ob-height').value.trim();
   if(!name){ toast('请填写称呼'); return; }
-  if(isNaN(year) || year < 1920 || year > 2020){ toast('请填写正确的出生年份（1920-2020）'); return; }
-  if(isNaN(height) || height < 120 || height > 220){ toast('请填写正确的身高（120-220 厘米）'); return; }
+  if(!/^\d{4}$/.test(yearRaw)){ toast('请填写正确的出生年份（1920-2016）'); return; }
+  var year = parseInt(yearRaw, 10);
+  if(year < 1920 || year > 2016){ toast('请填写正确的出生年份（1920-2016）'); return; }
+  if(!/^\d{2,3}$/.test(heightRaw)){ toast('请填写正确的身高（120-220 厘米）'); return; }
+  var height = parseInt(heightRaw, 10);
+  if(height < 120 || height > 220){ toast('请填写正确的身高（120-220 厘米）'); return; }
   obNext(4);
 }
 function obGender(el, v){
@@ -2489,8 +2530,8 @@ function obGender(el, v){
 function obCond(el){
   var c = el.getAttribute('data-cond');
   var idx = obConds.indexOf(c);
-  if(idx >= 0){ obConds.splice(idx,1); el.classList.remove('on'); }
-  else { obConds.push(c); el.classList.add('on'); }
+  if(idx >= 0){ obConds.splice(idx,1); el.classList.remove('on'); el.setAttribute('aria-pressed','false'); }
+  else { obConds.push(c); el.classList.add('on'); el.setAttribute('aria-pressed','true'); }
 }
 function finishOnboarding(){
   obToken++;
@@ -2621,11 +2662,13 @@ function switchUser(){
 (function(){
   var saved = null;
   try { saved = JSON.parse(localStorage.getItem('kangfu_user') || 'null'); } catch(e){ saved = null; }
-  // 存档校验：必须含合法 mode/name；损坏或旧版则清除并进入引导
-  if(saved && saved.mode && (saved.mode==='demo' || saved.mode==='new') && typeof saved.name === 'string' && saved.name.length > 0){
-    if(saved.mode==='new' && (!saved.conditions || !Array.isArray(saved.conditions))){
-      saved.conditions = [];
-    }
+  // 存档校验：mode/name/conditions 全部合法才视为有效；损坏则清除并进入引导
+  var valid = saved && saved.mode && (saved.mode==='demo' || saved.mode==='new')
+    && typeof saved.name === 'string' && saved.name.trim().length > 0;
+  if(valid && saved.mode==='new'){
+    valid = Array.isArray(saved.conditions) && saved.conditions.every(function(c){ return typeof c === 'string' && c.length > 0; });
+  }
+  if(valid){
     applyUserMode(saved);
   }else{
     try { localStorage.removeItem('kangfu_user'); } catch(e){}
