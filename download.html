@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>康福 · 安卓版下载</title>
+<style>
+:root{
+  --teal-50:#F0FDFA;--teal-600:#0D9488;--teal-700:#0F766E;--teal-900:#134E4A;
+  --ink:#162A26;--ink-2:#4C625D;--ink-3:#5C726D;--line:#DCE5E2;--bg:#EEF2F1;
+  --bad:#B91C1C;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:-apple-system,"PingFang SC","HarmonyOS Sans SC","Microsoft YaHei",sans-serif;
+  background:linear-gradient(165deg,#0B3B37 0%,#134E4A 45%,#0F766E 100%);
+  min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;color:#fff;
+}
+.card{
+  background:#fff;color:var(--ink);border-radius:24px;max-width:420px;width:100%;
+  padding:32px 28px;box-shadow:0 24px 60px rgba(0,0,0,.35);
+}
+.logo{
+  width:72px;height:72px;border-radius:20px;
+  background:linear-gradient(150deg,var(--teal-600),var(--teal-900));
+  display:flex;align-items:center;justify-content:center;margin:0 auto;
+}
+.logo svg{width:36px;height:36px;stroke:#fff}
+h1{font-size:24px;font-weight:800;text-align:center;margin-top:16px;letter-spacing:.02em}
+.sub{font-size:14px;color:var(--ink-2);text-align:center;margin-top:6px;line-height:1.6}
+.meta{
+  display:flex;justify-content:center;gap:16px;margin-top:14px;
+  font-size:12px;color:var(--ink-3);
+}
+.dl-btn{
+  display:block;text-align:center;margin-top:24px;
+  background:var(--teal-700);color:#fff;text-decoration:none;
+  border-radius:14px;padding:15px 0;font-size:16px;font-weight:700;
+  transition:transform .15s;
+}
+.dl-btn:active{transform:scale(.97)}
+.dl-note{font-size:11.5px;color:var(--ink-3);text-align:center;margin-top:8px}
+.steps{margin-top:26px;border-top:1px solid var(--line);padding-top:20px}
+.steps h2{font-size:13px;font-weight:700;color:var(--ink-2);margin-bottom:12px}
+.step{display:flex;gap:10px;margin-bottom:10px;font-size:13px;line-height:1.6;color:var(--ink)}
+.step b{
+  flex:none;width:20px;height:20px;border-radius:50%;background:var(--teal-50);
+  color:var(--teal-700);font-size:11.5px;display:flex;align-items:center;justify-content:center;margin-top:1px;
+}
+.warn{
+  margin-top:18px;background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;
+  padding:10px 14px;font-size:12px;color:var(--bad);line-height:1.6;
+}
+.pwa{margin-top:14px;font-size:12px;color:var(--ink-3);text-align:center;line-height:1.7}
+.pwa a{color:var(--teal-700);font-weight:600;text-decoration:none}
+.foot{margin-top:18px;font-size:11px;color:var(--ink-3);text-align:center;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2-5 3 10 2-7 1.5 2H21"/></svg>
+  </div>
+  <h1>康福 · 代谢健康档案</h1>
+  <div class="sub">四高与脂肪肝的健康档案管理<br>检验报告归档 · 指标趋势 · AI 解读</div>
+  <div class="meta"><span>安卓 APK</span><span>3.8 MB</span><span>v0.1 原型</span></div>
+
+  <a class="dl-btn" href="kangfu.apk" download>下载安卓版（APK）</a>
+  <div class="dl-note">原型版本 · debug 签名 · 仅供体验测试</div>
+
+  <div class="steps">
+    <h2>安装步骤</h2>
+    <div class="step"><b>1</b>点击上方按钮下载 APK 文件</div>
+    <div class="step"><b>2</b>下载完成后点击文件安装</div>
+    <div class="step"><b>3</b>系统提示"未知来源"时，允许本次安装</div>
+    <div class="step"><b>4</b>桌面出现"康福"图标，离线可用</div>
+  </div>
+
+  <div class="warn">安装包为原型演示版本（debug 签名），未做正式签名与加固，请勿在主力手机长期使用或填写真实健康数据。</div>
+
+  <div class="pwa">iPhone 或不想安装？可直接在浏览器使用：<a href="./">打开康福在线版</a><br>支持"添加到主屏幕"获得 App 体验</div>
+
+  <div class="foot">本应用为健康档案工具，不提供诊断和治疗建议</div>
+</div>
+</body>
+</html>
