@@ -18,12 +18,12 @@
   --surface:#FFFFFF;
   --ink:#162A26;
   --ink-2:#4C625D;
-  --ink-3:#7A8F8A;
+  --ink-3:#5C726D;
   --line:#DCE5E2;
   /* 语义色（仅状态用，克制） */
-  --ok:#059669;
+  --ok:#047857;
   --warn:#B45309;
-  --bad:#DC2626;
+  --bad:#B91C1C;
   --bad-bg:#FEF2F2;
   --ok-bg:#ECFDF5;
   --warn-bg:#FFFBEB;
@@ -76,9 +76,9 @@ body{
 .topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 2px 10px;position:sticky;top:0;background:var(--bg);z-index:4}
 .topbar h1{font-size:22px;font-weight:700;letter-spacing:-.01em}
 .topbar .sub{font-size:13px;color:var(--ink-3);margin-top:2px}
-.btn-back{display:flex;align-items:center;gap:2px;background:none;border:none;color:var(--teal-700);font-size:15px;font-weight:600;padding:6px 2px;cursor:pointer}
+.btn-back{display:flex;align-items:center;gap:2px;background:none;border:none;color:var(--teal-700);font-size:15px;font-weight:600;padding:10px 4px;min-height:44px;cursor:pointer}
 .btn-back svg{width:18px;height:18px}
-.icon-btn{width:38px;height:38px;border-radius:50%;background:var(--surface);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink-2);box-shadow:var(--shadow)}
+.icon-btn{width:44px;height:44px;border-radius:50%;background:var(--surface);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink-2);box-shadow:var(--shadow)}
 .icon-btn:active{transform:scale(.94)}
 
 .card{background:var(--surface);border-radius:var(--r-card);border:1px solid var(--line);box-shadow:var(--shadow);padding:16px}
@@ -141,7 +141,7 @@ body{
 .todo .t-title{font-size:15px;font-weight:600}
 .todo .t-sub{font-size:12px;color:var(--ink-3);margin-top:1px}
 .todo .t-action{flex:none}
-.check{width:24px;height:24px;border-radius:50%;border:2px solid var(--line);background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:transparent;transition:all .15s}
+.check{width:28px;height:28px;border-radius:50%;border:2px solid var(--line);background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:transparent;transition:all .15s;flex:none}
 .check.done{background:var(--teal-600);border-color:var(--teal-600);color:#fff}
 .check svg{width:14px;height:14px}
 
@@ -282,14 +282,14 @@ body{
 .abn-tip{font-size:12px;color:var(--ink-3);text-align:right}
 
 /* 报告对比 */
-.cmp-row{display:flex;align-items:center;gap:8px;padding:11px 0}
+.cmp-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto auto;gap:8px;align-items:center;padding:11px 0}
 .cmp-row + .cmp-row{border-top:1px solid var(--line)}
-.c-name{width:98px;font-size:13.5px;font-weight:600;flex:none}
-.c-old{font-size:13px;color:var(--ink-3);width:54px;text-align:right;flex:none}
-.c-arrow{color:var(--ink-3);flex:none;display:flex}
+.c-name{font-size:13.5px;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.c-old{font-size:13px;color:var(--ink-3);text-align:right}
+.c-arrow{color:var(--ink-3);display:flex;align-items:center}
 .c-arrow svg{width:14px;height:14px}
-.c-new{font-size:15px;font-weight:800;width:58px;text-align:right;flex:none}
-.c-delta{font-size:12px;color:var(--ink-3);width:56px;flex:none}
+.c-new{font-size:15px;font-weight:800;text-align:right}
+.c-delta{font-size:12px;color:var(--ink-3);text-align:right}
 .c-new.ok,.c-delta.ok{color:var(--ok)}
 .c-new.bad,.c-delta.bad{color:var(--bad)}
 .group-title{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:800;color:var(--teal-700);padding:8px 0 2px}
@@ -430,7 +430,8 @@ input::placeholder{color:#5F746F;opacity:1}
   position:absolute;left:50%;bottom:100px;transform:translateX(-50%) translateY(20px);
   background:var(--teal-900);color:#fff;font-size:14px;font-weight:600;
   padding:12px 22px;border-radius:999px;opacity:0;pointer-events:none;
-  transition:all .3s ease;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,.25);white-space:nowrap;
+  transition:all .3s ease;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,.25);
+  max-width:calc(100% - 32px);text-align:center;line-height:1.5;
 }
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 
@@ -531,7 +532,7 @@ input::placeholder{color:#5F746F;opacity:1}
           拍照归档化验单
         </button>
         <div class="quick-row">
-          <button class="quick teal" onclick="go('page-dietadd')">
+          <button class="quick teal" onclick="startDietAdd()">
             <span class="q-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11h18M12 11V4M7 11v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-8"/></svg></span>
             记饮食
           </button>
@@ -723,7 +724,7 @@ input::placeholder{color:#5F746F;opacity:1}
           <div class="ce-title">历次报告对比</div>
           <div class="ce-sub">本次与上次同类报告自动对比，看指标变好还是变差</div>
         </div>
-        <button class="ce-btn" onclick="go('page-compare')">查看</button>
+        <button class="ce-btn" onclick="event.stopPropagation();go('page-compare')">查看</button>
       </div>
 
       <!-- 时间轴 -->
@@ -859,7 +860,7 @@ input::placeholder{color:#5F746F;opacity:1}
           <h1>饮食日记</h1>
           <div class="sub">8 月 24 日 · 已记录 2 餐</div>
         </div>
-        <button class="icon-btn" onclick="go('page-dietadd')" aria-label="记饮食">
+        <button class="icon-btn" onclick="startDietAdd()" aria-label="记饮食">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
         </button>
       </div>
@@ -1405,7 +1406,7 @@ input::placeholder{color:#5F746F;opacity:1}
     </button>
   </div>
 
-  <div class="toast" id="toast"></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 
 <script>
@@ -1439,13 +1440,6 @@ function switchTab(tab){
     b.classList.toggle('on', b.getAttribute('data-tab')===tab);
   });
 }
-document.querySelector('.tabbar').addEventListener('click', function(e){
-  if(e.target.closest('.tab')){
-    document.querySelectorAll('.tab').forEach(function(b){
-      b.classList.toggle('on', b===e.target.closest('.tab'));
-    });
-  }
-});
 
 // ============ 日期 ============
 var d = new Date();
@@ -1473,7 +1467,9 @@ function pill(el){
 }
 
 // ============ OCR 扫描流程 ============
+var scanFrom = 'home';
 function startScan(){
+  scanFrom = stack.length ? stack[stack.length-1] : 'home';
   stack.push('scan');
   showScreen('scan');
   document.getElementById('scan-step1').style.display='';
@@ -1493,15 +1489,29 @@ function doScan(){
 function saveScan(){
   toast('已归档 12 项指标，3 项异常已标记');
   setTimeout(function(){
-    stack = ['archive'];
-    showScreen('archive');
+    stack = [scanFrom];
+    showScreen(scanFrom);
     document.querySelectorAll('.tab').forEach(function(b){
-      b.classList.toggle('on', b.getAttribute('data-tab')==='archive');
+      b.classList.toggle('on', b.getAttribute('data-tab')===scanFrom);
     });
   }, 900);
 }
 
 // ============ 饮食拍照流程 ============
+var dietFrom = 'diet';
+function startDietAdd(){
+  dietFrom = stack.length ? stack[stack.length-1] : 'diet';
+  stack.push('dietadd');
+  showScreen('dietadd');
+  // 重置流程状态，防止上次残留
+  document.getElementById('diet-step1').style.display='';
+  document.getElementById('diet-step2').style.display='none';
+  document.getElementById('diet-ocr').classList.remove('on');
+  document.getElementById('diet-step3').classList.remove('done');
+  var segBtns = document.querySelectorAll('#diet-meal-seg button');
+  segBtns.forEach(function(b){ b.classList.remove('on'); });
+  if(segBtns[1]) segBtns[1].classList.add('on');
+}
 function doDietScan(){
   var ocr = document.getElementById('diet-ocr');
   ocr.classList.add('on');
@@ -1524,7 +1534,7 @@ function chip(el){ el.classList.toggle('on'); }
 function saveDiet(){
   var mealBtn = document.querySelector('#diet-meal-seg button.on');
   var meal = mealBtn ? mealBtn.textContent : '晚餐';
-  var note = document.getElementById('diet-note').value || '';
+  var note = esc(document.getElementById('diet-note').value || '');
   var chips = [];
   document.querySelectorAll('#diet-step2 .diet-chip.on').forEach(function(c){ chips.push(c.textContent); });
   var tagsHtml = chips.map(function(t){
@@ -1545,12 +1555,15 @@ function saveDiet(){
   document.querySelector('#screen-diet .sub').textContent = '8 月 24 日 · 已记录 3 餐';
   toast('已记录'+meal+' · 红烧肉饭');
   setTimeout(function(){
-    stack = ['diet'];
-    showScreen('diet');
+    stack = [dietFrom];
+    showScreen(dietFrom);
     document.querySelectorAll('.tab').forEach(function(b){
-      b.classList.toggle('on', b.getAttribute('data-tab')==='diet');
+      b.classList.toggle('on', b.getAttribute('data-tab')===dietFrom);
     });
   }, 900);
+}
+function esc(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 function nowTime(){
   var d = new Date();
@@ -1567,6 +1580,20 @@ function toast(msg){
   clearTimeout(toastTimer);
   toastTimer = setTimeout(function(){ t.classList.remove('on'); }, 2200);
 }
+
+// ============ 表单可访问性初始化 ============
+document.addEventListener('DOMContentLoaded', function(){
+  // 化验确认表：数值输入框加数字键盘 + 名称
+  document.querySelectorAll('.confirm-table .ct-row').forEach(function(row){
+    var name = row.querySelector('.ct-name');
+    var input = row.querySelector('input');
+    if(name && input){
+      input.setAttribute('inputmode','decimal');
+      input.setAttribute('aria-label', name.textContent);
+    }
+  });
+  document.getElementById('diet-note').setAttribute('aria-label','饮食备注');
+});
 </script>
 </body>
 </html>
