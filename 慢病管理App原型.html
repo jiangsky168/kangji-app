@@ -398,6 +398,14 @@ body{
 .ob-gender:active{transform:scale(.98)}
 .ob-step input:focus{outline:2px solid var(--teal-600);border-color:var(--teal-600);background:#fff}
 
+/* 我的页切换用户小按钮 */
+.switch-mini{
+  border:1px solid var(--teal-600);background:var(--teal-50);color:var(--teal-700);
+  border-radius:999px;padding:5px 13px;font-size:12.5px;font-weight:700;
+  cursor:pointer;font-family:var(--font);flex:none;
+}
+.switch-mini:active{transform:scale(.95)}
+
 /* 拍照流程 */
 .camera-view{
   aspect-ratio:3/4;border-radius:20px;overflow:hidden;position:relative;
@@ -1457,8 +1465,11 @@ input::placeholder{color:#5F746F;opacity:1}
       <div class="card">
         <div class="profile-head">
           <div class="avatar">张</div>
-          <div>
-            <div class="p-name" id="mine-profile-name">张卫东</div>
+          <div style="flex:1">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div class="p-name" id="mine-profile-name">张卫东</div>
+              <button class="switch-mini" onclick="switchUser()">切换用户</button>
+            </div>
             <div class="p-meta" id="mine-profile-meta">57 岁 · 男 · 172 cm · 72.5 kg</div>
             <div class="cond-chips" id="mine-profile-conditions">
               <span class="tag">高血压</span><span class="tag">2 型糖尿病</span><span class="tag">血脂异常</span><span class="tag">高尿酸</span><span class="tag warn-tag">脂肪肝</span>
