@@ -1,6 +1,13 @@
 // 原型逻辑层自动化测试（jsdom）
-const { JSDOM } = require('jsdom');
 const fs = require('fs');
+const os = require('os');
+const path = require('path');
+
+// 优先使用项目依赖，当前本机可复用 Hermes 已安装的 jsdom
+const jsdomPath = require.resolve('jsdom', {
+  paths: [process.cwd(), path.join(os.homedir(), '.hermes/hermes-agent')]
+});
+const { JSDOM } = require(jsdomPath);
 
 const html = fs.readFileSync('慢病管理App原型.html', 'utf8');
 const dom = new JSDOM(html, { runScripts: 'dangerously', pretendToBeVisual: true });
@@ -132,7 +139,102 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   doc.querySelector('#page-archive .btn-primary').click();
   assert('再次进入扫描步骤3已重置', !doc.getElementById('step3').classList.contains('done'));
 
-  console.log('=== 10. JS运行时错误 ===');
+  console.log('=== 10. V2 AI 报告解读 ===');
+  doc.querySelector('.tabbar .tab[data-tab="archive"]').click();
+  doc.querySelector('.report-detail-entry').click();
+  assert('报告时间线入口 -> 报告详情页', visible('screen-reportdetail'));
+  assert('报告详情页包含逐项解读', doc.querySelectorAll('#page-reportdetail .ai-result').length === 10);
+  doc.querySelector('#page-reportdetail .report-compare-btn').click();
+  assert('报告详情 -> 历次报告对比', visible('screen-compare'));
+  doc.querySelector('#page-compare .btn-back').click();
+  doc.querySelector('#page-reportdetail .btn-back').click();
+  assert('报告详情返回 -> 档案页', visible('screen-archive'));
+
+  console.log('=== 11. V2 共病关联分析 ===');
+  doc.querySelector('.tabbar .tab[data-tab="archive"]').click();
+  doc.querySelector('.insight-entry').click();
+  assert('关联分析入口 -> 关联分析页', visible('screen-insight'));
+  assert('关联分析页包含双线趋势', doc.querySelectorAll('#page-insight .insight-chart path').length === 2);
+  assert('关联分析页包含 4 条联动说明', doc.querySelectorAll('#page-insight .insight-link').length === 4);
+  doc.querySelector('#page-insight .btn-back').click();
+  assert('关联分析返回 -> 档案页', visible('screen-archive'));
+
+  console.log('=== 12. V2 AI 预问诊 ===');
+  doc.querySelector('.tabbar .tab[data-tab="home"]').click();
+  doc.querySelector('.previsit-entry').click();
+  assert('复诊前准备入口 -> 预问诊页', visible('screen-previsit'));
+  doc.querySelector('#previsit-step1 .answer-chip[data-answer="无"]').click();
+  assert('回答第一问后显示第二问', doc.getElementById('previsit-step2').style.display === 'block');
+  doc.getElementById('previsit-count').value = '5';
+  doc.querySelector('#previsit-step2 .btn-primary').click();
+  assert('完成问答后生成复诊清单', doc.getElementById('previsit-result').style.display === 'block');
+  doc.querySelector('#previsit-result .check').click();
+  assert('复诊清单支持勾选', doc.querySelector('#previsit-result .check').classList.contains('done'));
+  doc.querySelector('#page-previsit .btn-back').click();
+  assert('预问诊返回 -> 首页', visible('screen-home'));
+
+  console.log('=== 13. V2 就诊摘要导出 ===');
+  doc.querySelector('.tabbar .tab[data-tab="mine"]').click();
+  doc.querySelector('.summary-entry').click();
+  assert('就诊摘要入口 -> 摘要页', visible('screen-summary'));
+  assert('就诊摘要包含五维指标', doc.querySelectorAll('#page-summary .summary-table tbody tr').length >= 5);
+  doc.querySelector('#page-summary .summary-export').click();
+  assert('导出 PDF 显示反馈', doc.getElementById('toast').classList.contains('on'));
+  doc.querySelector('#page-summary .btn-back').click();
+  assert('就诊摘要返回 -> 我的页', visible('screen-mine'));
+
+  console.log('=== 14. V2 复诊提醒 ===');
+  doc.querySelector('.tabbar .tab[data-tab="home"]').click();
+  doc.querySelector('.reminder-entry').click();
+  assert('复查待办入口 -> 提醒设置页', visible('screen-reminder'));
+  assert('提醒设置页包含 4 类复查周期', doc.querySelectorAll('#page-reminder .reminder-row').length === 4);
+  doc.querySelector('#page-reminder [data-reminder="liver"] .toggle').click();
+  doc.querySelector('#page-reminder [data-reminder="glucose"] .toggle').click();
+  assert('复查提醒开关可切换', doc.querySelectorAll('#page-reminder .toggle.on').length === 3);
+  doc.querySelector('#page-reminder .reminder-save').click();
+  assert('保存提醒返回 -> 首页', visible('screen-home'));
+  assert('首页显示已设置 3 项提醒', doc.getElementById('reminder-status').textContent.includes('3 项'));
+  doc.querySelector('.reminder-entry').click();
+  doc.querySelector('#page-reminder .btn-back').click();
+  assert('提醒设置返回按钮正常', visible('screen-home'));
+
+  console.log('=== 15. V2 家庭档案 ===');
+  doc.querySelector('.tabbar .tab[data-tab="mine"]').click();
+  doc.querySelector('.family-entry').click();
+  assert('家庭健康档案入口 -> 家庭页', visible('screen-family'));
+  assert('家庭页显示 2 位成员', doc.querySelectorAll('#page-family .family-member').length === 2);
+  doc.querySelector('#page-family .family-member[data-name="李秀兰"]').click();
+  assert('成员切换后显示李秀兰', doc.getElementById('family-current-name').textContent === '李秀兰');
+  assert('首页成员名同步更新', doc.getElementById('home-member-name').textContent === '李秀兰');
+  assert('成员资料同步为母亲档案', doc.getElementById('mine-profile-meta').textContent.includes('女'));
+  doc.querySelector('#page-family .btn-back').click();
+  assert('家庭档案返回 -> 我的页', visible('screen-mine'));
+
+  console.log('=== 16. V2 付费订阅 ===');
+  doc.querySelector('.tabbar .tab[data-tab="mine"]').click();
+  doc.querySelector('.subscribe-entry').click();
+  assert('康迹会员入口 -> 订阅页', visible('screen-subscribe'));
+  assert('订阅页显示免费版和会员版对比', doc.querySelectorAll('#page-subscribe .benefit-table > div').length === 15);
+  doc.querySelector('#page-subscribe .price-card[data-plan="年卡"]').click();
+  assert('年卡价格可选择', doc.querySelector('#page-subscribe .price-card[data-plan="年卡"]').classList.contains('on'));
+  doc.querySelector('#page-subscribe .subscribe-buy').click();
+  assert('开通会员显示原型反馈', doc.getElementById('toast').classList.contains('on'));
+  doc.querySelector('#page-subscribe .btn-back').click();
+  assert('订阅页返回 -> 我的页', visible('screen-mine'));
+
+  console.log('=== 17. V2 健康数据互通 ===');
+  doc.querySelector('.tabbar .tab[data-tab="mine"]').click();
+  doc.querySelector('.devices-entry').click();
+  assert('数据与设备入口 -> 设备页', visible('screen-devices'));
+  assert('设备页显示 4 个数据源', doc.querySelectorAll('#page-devices .device-row').length === 4);
+  assert('初始有 2 个数据源已连接', doc.querySelectorAll('#page-devices .toggle.on').length === 2);
+  doc.querySelector('#page-devices [data-device="微信运动"] .toggle').click();
+  assert('微信运动开关可连接', doc.querySelector('#page-devices [data-device="微信运动"] .device-state').textContent === '已连接');
+  assert('设备连接显示原型反馈', doc.getElementById('toast').classList.contains('on'));
+  doc.querySelector('#page-devices .btn-back').click();
+  assert('数据与设备返回 -> 我的页', visible('screen-mine'));
+
+  console.log('=== 18. JS运行时错误 ===');
   assert('无未捕获错误', errors.length === 0);
   if (errors.length) console.log('   错误:', errors.slice(0, 5));
 
