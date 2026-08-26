@@ -1,0 +1,7 @@
+# APK 工程构建产物
+apk/node_modules/
+apk/android/.gradle/
+apk/android/build/
+apk/android/app/build/
+apk/android/capacitor-cordova-android-plugins/build/
+apk/*.log
