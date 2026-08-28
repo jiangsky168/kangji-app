@@ -115,6 +115,40 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   assert('相册选图入口存在', !!albumButton);
   var scanFile = doc.getElementById('scan-file');
   assert('相册文件输入支持多选', !!scanFile && scanFile.hasAttribute('multiple'));
+  assert('OCR API 使用本机服务默认地址', win.eval('OCR_API') === 'http://192.168.1.56:8001/ocr');
+  var parsed = win.parseOcrLines([
+    '市第一人民医院', '检验报告单',
+    '葡萄糖 GLU', '6.8', '3.9-6.1 mmol/L', 'H',
+    '总胆固醇 TC', '5.6', '<5.2 mmol/L',
+    '尿酸 UA', '445', '208-428 umol/L'
+  ]);
+  var parsedByName = {};
+  parsed.forEach(function(item){ parsedByName[item.name] = item; });
+  assert('parseOcrLines 固定输出 10 项', parsed.length === 10);
+  assert('parseOcrLines 识别葡萄糖真实值', parsedByName['空腹血糖'].value === '6.8');
+  assert('parseOcrLines 识别总胆固醇真实值', parsedByName['总胆固醇'].value === '5.6');
+  assert('parseOcrLines 识别尿酸并规范单位', parsedByName['血尿酸'].value === '445' && parsedByName['血尿酸'].unit === 'μmol/L');
+  assert('parseOcrLines 捕捉参考范围', parsedByName['空腹血糖'].ref === '3.9-6.1');
+  assert('parseOcrLines 缺项为 --', parsedByName['甘油三酯'].value === '--' && parsedByName['糖化血红蛋白'].value === '--');
+
+  var ocrFetchCalls = [];
+  win.fetch = function(url, options){
+    var file = options.body.get('file');
+    ocrFetchCalls.push({url:url, method:options.method, file:file && file.name, signal:options.signal});
+    if(file && file.name === 'offline.jpg') return Promise.reject(new Error('offline'));
+    var values = file && file.name === 'report-1.jpg' ? ['6.1','5.1'] :
+      file && file.name === 'report-2.jpg' ? ['7.2','6.0'] : ['6.8','5.6'];
+    return Promise.resolve({
+      ok: true,
+      status: 200,
+      json: function(){
+        return Promise.resolve({ok:true, lines:[
+          '葡萄糖 GLU', values[0], '3.9-6.1 mmol/L', 'H',
+          '总胆固醇 TC', values[1], '<5.2 mmol/L'
+        ], time_ms:123});
+      }
+    });
+  };
   if(scanFile){
     Object.defineProperty(scanFile, 'files', {
       value: [new win.File(['x'], 'report.jpg', {type:'image/jpeg'})],
@@ -123,8 +157,14 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     scanFile.dispatchEvent(new win.Event('change', {bubbles:true}));
   }
   assert('单张相册选图后 OCR 状态与标题不变', !!scanFile && doc.getElementById('ocr-state').classList.contains('on') && doc.querySelector('#ocr-state .o-t').textContent === '正在识别报告内容');
-  await sleep(2400);
+  await sleep(200);
+  assert('相册 OCR 状态最短展示期间不提前进入确认页', doc.getElementById('ocr-state').classList.contains('on') && doc.querySelector('#scan-step2').style.display === 'none');
+  await sleep(700);
   assert('相册选图后显示指标确认页', !!scanFile && doc.querySelector('#scan-step2').style.display !== 'none');
+  assert('相册 OCR 通过 multipart file 请求本机接口', ocrFetchCalls[0].url === win.eval('OCR_API') && ocrFetchCalls[0].method === 'POST' && ocrFetchCalls[0].file === 'report.jpg');
+  assert('真实 OCR 数值填入确认页', doc.querySelectorAll('#scan-step2 .ct-row input')[0].value === '6.8' && doc.querySelectorAll('#scan-step2 .ct-row input')[1].value === '5.6');
+  assert('OCR 缺项显示待补充且不保留演示值', doc.querySelectorAll('#scan-step2 .ct-row input')[2].value === '' && doc.querySelectorAll('#scan-step2 .ct-row input')[2].placeholder === '待补充');
+  assert('真实 OCR 成功提示包含识别项数', doc.getElementById('toast').textContent.indexOf('识别完成（本地OCR · 2 项）') >= 0);
   var scanFileStatus = doc.getElementById('scan-file-status');
   assert('已选提示包含文件名', !!scanFileStatus && scanFileStatus.textContent.indexOf('report.jpg') >= 0);
   win.eval('resetScan()');
@@ -143,16 +183,32 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   }
   assert('多选提示显示已选择 2 张图片', !!scanFileStatus && scanFileStatus.textContent === '已选择 2 张图片');
   assert('第一张显示 OCR 进度', doc.getElementById('ocr-state').classList.contains('on') && doc.querySelector('#ocr-state .o-t').textContent.indexOf('第 1/2 张') >= 0);
-  await sleep(2400);
+  await sleep(900);
   assert('第一张 OCR 后进入确认页', doc.querySelector('#scan-step2').style.display !== 'none');
+  assert('第一张使用自己的真实 OCR 结果', doc.querySelector('#scan-step2 .ct-row input').value === '6.1');
   doc.querySelector('#scan-step2 .btn-primary').click();
   assert('第一张归档后自动识别第二张', doc.getElementById('ocr-state').classList.contains('on') && doc.querySelector('#ocr-state .o-t').textContent.indexOf('第 2/2 张') >= 0 && doc.getElementById('toast').textContent.indexOf('第 1 张已归档，继续第 2 张') >= 0);
-  await sleep(2400);
+  await sleep(900);
   assert('第二张 OCR 后进入确认页', doc.querySelector('#scan-step2').style.display !== 'none');
+  assert('第二张使用不同的真实 OCR 结果', doc.querySelector('#scan-step2 .ct-row input').value === '7.2');
   doc.querySelector('#scan-step2 .btn-primary').click();
   assert('全部完成提示已归档 2 张报告', doc.getElementById('toast').textContent.indexOf('已归档 2 张报告') >= 0);
   await sleep(1000);
   assert('多张报告归档后回首页', visible('screen-home'));
+
+  console.log('=== 5.3. 化验单相册 OCR 失败降级 ===');
+  win.eval('startScan()');
+  if(scanFile){
+    Object.defineProperty(scanFile, 'files', {
+      value: [new win.File(['x'], 'offline.jpg', {type:'image/jpeg'})],
+      configurable: true
+    });
+    scanFile.dispatchEvent(new win.Event('change', {bubbles:true}));
+  }
+  await sleep(900);
+  assert('OCR 连接失败显示同 WiFi 提示', doc.getElementById('toast').textContent.indexOf('无法连接识别服务，请确认电脑已开机且手机在同一 WiFi') >= 0);
+  assert('OCR 连接失败停留取景页', doc.getElementById('scan-step1').style.display !== 'none' && doc.querySelector('#scan-step2').style.display === 'none');
+  assert('OCR 连接失败不填充演示数据', Array.from(doc.querySelectorAll('#scan-step2 .ct-row input')).every(function(input){ return input.value === ''; }));
 
   win.eval('startScan()');
   if(scanFile){

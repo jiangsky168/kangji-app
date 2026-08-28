@@ -2319,6 +2319,71 @@ var scanFrom = 'home';
 var scanToken = 0;
 var scanFiles = [];
 var scanIdx = 0;
+var OCR_API = (localStorage.getItem('ocr_api') || 'http://192.168.1.56:8001/ocr');
+var OCR_METRICS = [
+  {name:'空腹血糖', aliases:['葡萄糖','GLU','空腹血糖','Glu'], unit:'mmol/L', ref:'<6.1'},
+  {name:'总胆固醇', aliases:['总胆固醇','TC','胆固醇'], unit:'mmol/L', ref:'<5.2'},
+  {name:'甘油三酯', aliases:['甘油三酯','TG'], unit:'mmol/L', ref:'<1.7'},
+  {name:'低密度脂蛋白', aliases:['低密度脂蛋白','LDL','LDLC'], unit:'mmol/L', ref:'<3.4'},
+  {name:'高密度脂蛋白', aliases:['高密度脂蛋白','HDL','HDLC'], unit:'mmol/L', ref:'≥1.0'},
+  {name:'血尿酸', aliases:['尿酸','UA'], unit:'μmol/L', ref:'<420'},
+  {name:'谷丙转氨酶', aliases:['谷丙转氨酶','ALT','丙氨酸氨基转移酶'], unit:'U/L', ref:'<40'},
+  {name:'谷草转氨酶', aliases:['谷草转氨酶','AST','天门冬氨酸氨基转移酶'], unit:'U/L', ref:'<40'},
+  {name:'γ-谷氨酰转肽酶', aliases:['γ-谷氨酰转肽酶','GGT','γ-GT','谷氨酰转肽酶'], unit:'U/L', ref:'<50'},
+  {name:'糖化血红蛋白', aliases:['糖化血红蛋白','HbA1c','糖化'], unit:'%', ref:'<7'}
+];
+function parseOcrLines(lines){
+  var texts = Array.isArray(lines) ? lines.map(function(line){ return String(line).trim(); }) : [];
+  var numberPattern = /^\d+(?:\.\d+)?$/;
+  var unitPattern = /(mmol\/L|[μµu]mol\/L|U\/L|%|mg\/dL)/i;
+  var refPattern = /([<>≤≥]\s*\d+(?:\.\d+)?|\d+(?:\.\d+)?\s*[-~至]\s*\d+(?:\.\d+)?)/;
+  return OCR_METRICS.map(function(metric){
+    var matchIndex = -1;
+    for(var i=0;i<texts.length;i++){
+      var lower = texts[i].toLowerCase();
+      if(metric.aliases.some(function(alias){ return lower.indexOf(alias.toLowerCase()) >= 0; })){
+        matchIndex = i;
+        break;
+      }
+    }
+    var value = '--';
+    var unit = metric.unit;
+    var ref = metric.ref;
+    if(matchIndex >= 0){
+      var end = Math.min(texts.length - 1, matchIndex + 3);
+      for(var j=matchIndex;j<=end;j++){
+        if(value === '--' && numberPattern.test(texts[j])) value = texts[j];
+        var unitMatch = texts[j].match(unitPattern);
+        if(unitMatch) unit = unitMatch[1].replace(/^u(?=mol)/i, 'μ').replace(/^µ/, 'μ');
+        var refMatch = texts[j].match(refPattern);
+        if(refMatch) ref = refMatch[1].replace(/\s+/g, '');
+      }
+    }
+    return {name:metric.name, value:value, unit:unit, ref:ref};
+  });
+}
+function applyOcrResults(results){
+  var found = 0;
+  document.querySelectorAll('#scan-step2 .ct-row').forEach(function(row){
+    var name = row.querySelector('.ct-name').textContent;
+    var result = results.find(function(item){ return item.name === name; });
+    var input = row.querySelector('input');
+    if(!result || result.value === '--'){
+      input.value = '';
+      input.placeholder = '待补充';
+    }else{
+      input.value = result.value;
+      input.placeholder = '';
+      found++;
+    }
+    if(result){
+      row.querySelector('.ct-unit').textContent = result.unit;
+      row.querySelector('.ct-ref').textContent = result.ref;
+    }
+  });
+  document.querySelector('#scan-step2 .card-title .badge').textContent = found + ' 项已识别';
+  return found;
+}
 function clearScanFileSelection(){
   var input = document.getElementById('scan-file');
   var status = document.getElementById('scan-file-status');
@@ -2333,10 +2398,14 @@ function clearScanQueue(){
   document.querySelector('#ocr-state .o-t').textContent = '正在识别报告内容';
 }
 function restoreScanInputs(){
-  document.querySelectorAll('#scan-step2 .ct-row input').forEach(function(input){
-    var def = input.getAttribute('data-default');
-    if(def !== null) input.value = def;
+  document.querySelectorAll('#scan-step2 .ct-row').forEach(function(row){
+    var input = row.querySelector('input');
+    input.value = input.getAttribute('data-default') || '';
+    input.placeholder = '';
+    row.querySelector('.ct-unit').textContent = row.getAttribute('data-default-unit') || '';
+    row.querySelector('.ct-ref').textContent = row.getAttribute('data-default-ref') || '';
   });
+  document.querySelector('#scan-step2 .card-title .badge').textContent = '10 项已识别';
 }
 document.getElementById('scan-file').addEventListener('change', function(){
   if(!this.files || !this.files.length) return;
@@ -2374,12 +2443,50 @@ function doScan(){
   document.querySelector('#ocr-state .o-t').textContent = scanFiles.length > 1 ? '正在识别报告内容（第 ' + (scanIdx + 1) + '/' + scanFiles.length + ' 张）' : '正在识别报告内容';
   ocr.classList.add('on');
   document.getElementById('step3').classList.add('done');
+  if(scanFiles.length && scanFiles[scanIdx]){
+    recognizeAlbumFile(scanFiles[scanIdx], myToken, ocr);
+    return;
+  }
+  restoreScanInputs();
   setTimeout(function(){
     if(myToken !== scanToken) return; // 流程已重置/退出，忽略旧定时器
     ocr.classList.remove('on');
     document.getElementById('scan-step1').style.display='none';
     document.getElementById('scan-step2').style.display='';
   }, 2200);
+}
+async function recognizeAlbumFile(file, myToken, ocr){
+  var startedAt = Date.now();
+  var controller = new AbortController();
+  var timeoutId = setTimeout(function(){ controller.abort(); }, 8000);
+  applyOcrResults(parseOcrLines([]));
+  try{
+    var form = new FormData();
+    form.append('file', file);
+    var response = await fetch(OCR_API, {method:'POST', body:form, signal:controller.signal});
+    if(!response.ok) throw new Error('OCR HTTP ' + response.status);
+    var data = await response.json();
+    if(!data || data.ok !== true || !Array.isArray(data.lines)) throw new Error('OCR response invalid');
+    var remaining = 800 - (Date.now() - startedAt);
+    if(remaining > 0) await new Promise(function(resolve){ setTimeout(resolve, remaining); });
+    if(myToken !== scanToken) return;
+    var found = applyOcrResults(parseOcrLines(data.lines));
+    ocr.classList.remove('on');
+    document.getElementById('scan-step1').style.display='none';
+    document.getElementById('scan-step2').style.display='';
+    toast('识别完成（本地OCR · ' + found + ' 项）');
+  }catch(error){
+    var wait = 800 - (Date.now() - startedAt);
+    if(wait > 0) await new Promise(function(resolve){ setTimeout(resolve, wait); });
+    if(myToken !== scanToken) return;
+    ocr.classList.remove('on');
+    document.getElementById('step3').classList.remove('done');
+    document.getElementById('scan-step1').style.display='';
+    document.getElementById('scan-step2').style.display='none';
+    toast('无法连接识别服务，请确认电脑已开机且手机在同一 WiFi');
+  }finally{
+    clearTimeout(timeoutId);
+  }
 }
 function saveScan(){
   // 从确认表读取实际数值，统计归档项数
@@ -2625,6 +2732,8 @@ document.addEventListener('DOMContentLoaded', function(){
       input.setAttribute('inputmode','decimal');
       input.setAttribute('aria-label', name.textContent);
       if(!input.getAttribute('data-default')) input.setAttribute('data-default', input.value);
+      if(!row.getAttribute('data-default-unit')) row.setAttribute('data-default-unit', row.querySelector('.ct-unit').textContent);
+      if(!row.getAttribute('data-default-ref')) row.setAttribute('data-default-ref', row.querySelector('.ct-ref').textContent);
     }
   });
   document.getElementById('diet-note').setAttribute('aria-label','饮食备注');
