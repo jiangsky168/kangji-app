@@ -160,6 +160,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   await sleep(200);
   assert('相册 OCR 状态最短展示期间不提前进入确认页', doc.getElementById('ocr-state').classList.contains('on') && doc.querySelector('#scan-step2').style.display === 'none');
   await sleep(700);
+  await sleep(1100); // 等待 compressImage 兜底（jsdom 无 Image 加载）
   assert('相册选图后显示指标确认页', !!scanFile && doc.querySelector('#scan-step2').style.display !== 'none');
   assert('相册 OCR 通过 multipart file 请求本机接口', ocrFetchCalls[0].url === win.eval('OCR_API') && ocrFetchCalls[0].method === 'POST' && ocrFetchCalls[0].file === 'report.jpg');
   assert('真实 OCR 数值填入确认页', doc.querySelectorAll('#scan-step2 .ct-row input')[0].value === '6.8' && doc.querySelectorAll('#scan-step2 .ct-row input')[1].value === '5.6');
@@ -183,12 +184,12 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   }
   assert('多选提示显示已选择 2 张图片', !!scanFileStatus && scanFileStatus.textContent === '已选择 2 张图片');
   assert('第一张显示 OCR 进度', doc.getElementById('ocr-state').classList.contains('on') && doc.querySelector('#ocr-state .o-t').textContent.indexOf('第 1/2 张') >= 0);
-  await sleep(900);
+  await sleep(1900); // 含 compressImage 兜底等待
   assert('第一张 OCR 后进入确认页', doc.querySelector('#scan-step2').style.display !== 'none');
   assert('第一张使用自己的真实 OCR 结果', doc.querySelector('#scan-step2 .ct-row input').value === '6.1');
   doc.querySelector('#scan-step2 .btn-primary').click();
   assert('第一张归档后自动识别第二张', doc.getElementById('ocr-state').classList.contains('on') && doc.querySelector('#ocr-state .o-t').textContent.indexOf('第 2/2 张') >= 0 && doc.getElementById('toast').textContent.indexOf('第 1 张已归档，继续第 2 张') >= 0);
-  await sleep(900);
+  await sleep(1900); // 含 compressImage 兜底等待
   assert('第二张 OCR 后进入确认页', doc.querySelector('#scan-step2').style.display !== 'none');
   assert('第二张使用不同的真实 OCR 结果', doc.querySelector('#scan-step2 .ct-row input').value === '7.2');
   doc.querySelector('#scan-step2 .btn-primary').click();
@@ -205,7 +206,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     });
     scanFile.dispatchEvent(new win.Event('change', {bubbles:true}));
   }
-  await sleep(900);
+  await sleep(1900); // 含 compressImage 兜底等待
   assert('OCR 连接失败显示同 WiFi 提示', doc.getElementById('toast').textContent.indexOf('无法连接识别服务，请确认电脑已开机且手机在同一 WiFi') >= 0);
   assert('OCR 连接失败停留取景页', doc.getElementById('scan-step1').style.display !== 'none' && doc.querySelector('#scan-step2').style.display === 'none');
   assert('OCR 连接失败不填充演示数据', Array.from(doc.querySelectorAll('#scan-step2 .ct-row input')).every(function(input){ return input.value === ''; }));

@@ -2485,10 +2485,40 @@ function doScan(){
     document.getElementById('scan-step2').style.display='';
   }, 2200);
 }
+function compressImage(file, maxSide){
+  return new Promise(function(resolve){
+    var done = false;
+    function finish(f){ if(!done){ done = true; resolve(f); } }
+    setTimeout(function(){ finish(file); }, 1500); // 异常环境兜底：直接传原图
+    var reader = new FileReader();
+    reader.onerror = function(){ finish(file); };
+    reader.onload = function(){
+      var img = new Image();
+      img.onerror = function(){ finish(file); };
+      img.onload = function(){
+        try{
+          var scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+          var w = Math.max(1, Math.round(img.width * scale));
+          var h = Math.max(1, Math.round(img.height * scale));
+          var canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          canvas.toBlob(function(blob){
+            if(blob) finish(new File([blob], file.name, {type:'image/jpeg'}));
+            else finish(file);
+          }, 'image/jpeg', 0.85);
+        }catch(e){ finish(file); }
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
 async function recognizeAlbumFile(file, myToken, ocr){
   var startedAt = Date.now();
+  file = await compressImage(file, 2000);
   var controller = new AbortController();
-  var timeoutId = setTimeout(function(){ controller.abort(); }, 8000);
+  var timeoutId = setTimeout(function(){ controller.abort(); }, 30000);
   applyOcrResults(parseOcrLines([]));
   try{
     var form = new FormData();
