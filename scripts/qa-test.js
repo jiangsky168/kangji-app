@@ -9,7 +9,7 @@ const jsdomPath = require.resolve('jsdom', {
 });
 const { JSDOM } = require(jsdomPath);
 
-const html = fs.readFileSync('慢病管理App原型.html', 'utf8');
+const html = fs.readFileSync('index.html', 'utf8');
 const dom = new JSDOM(html, {
   runScripts: 'dangerously',
   pretendToBeVisual: true,
@@ -106,6 +106,28 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   doc.querySelector('#scan-step2 .btn-primary').click();
   await sleep(1000);
   assert('归档后回首页', visible('screen-home'));
+
+  console.log('=== 5.1. 化验单相册选图 ===');
+  win.eval('startScan()');
+  var albumButton = Array.from(doc.querySelectorAll('#scan-step1 button')).find(function(button){
+    return button.textContent.indexOf('从相册选择') >= 0;
+  });
+  assert('相册选图入口存在', !!albumButton);
+  var scanFile = doc.getElementById('scan-file');
+  if(scanFile){
+    Object.defineProperty(scanFile, 'files', {
+      value: [new win.File(['x'], 'report.jpg', {type:'image/jpeg'})],
+      configurable: true
+    });
+    scanFile.dispatchEvent(new win.Event('change', {bubbles:true}));
+  }
+  assert('相册选图后 OCR 状态可见', !!scanFile && doc.getElementById('ocr-state').classList.contains('on'));
+  await sleep(2400);
+  assert('相册选图后显示指标确认页', !!scanFile && doc.querySelector('#scan-step2').style.display !== 'none');
+  var scanFileStatus = doc.getElementById('scan-file-status');
+  assert('已选提示包含文件名', !!scanFileStatus && scanFileStatus.textContent.indexOf('report.jpg') >= 0);
+  win.eval('resetScan()');
+  assert('重新拍后清除已选提示', !!scanFileStatus && scanFileStatus.style.display === 'none' && scanFileStatus.textContent === '');
 
   console.log('=== 6. 饮食记录流程 ===');
   doc.querySelector('.tabbar .tab[data-tab="home"]').click();
