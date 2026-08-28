@@ -431,6 +431,7 @@ body{
 .new-user-empty .empty-value{font-size:28px;font-weight:800;color:var(--ink-2)}
 .new-user-empty .empty-value span{display:block;font-size:14px;font-weight:600;color:var(--ink-3);margin-top:4px}
 .new-user-empty p{font-size:13px;color:var(--ink-3);line-height:1.65;margin-top:10px}
+.new-user-empty.has-metrics{text-align:left;padding:20px 18px}
 body.new-user-mode .data-page > :not(.topbar):not(.demo-banner):not(.new-user-empty){display:none!important}
 body.new-user-mode .data-page > .new-user-empty{display:block!important}
 body.new-user-mode .demo-meal-content,body.new-user-mode .demo-diet-stat{display:none!important}
@@ -760,8 +761,8 @@ input::placeholder{color:#5F746F;opacity:1}
         </div>
         <div class="metric">
           <div class="m-label">空腹血糖</div>
-          <div class="m-value num">6.8<span class="m-unit">mmol/L</span></div>
-          <div class="m-trend">较上周 -0.3</div>
+          <div class="m-value num" id="home-glucose-value">6.8<span class="m-unit">mmol/L</span></div>
+          <div class="m-trend" id="home-glucose-trend">较上周 -0.3</div>
         </div>
         <div class="metric">
           <div class="m-label">体重</div>
@@ -887,8 +888,8 @@ input::placeholder{color:#5F746F;opacity:1}
               <div class="ring-num"><b>76%</b><span>达标率</span></div>
             </div>
             <div style="flex:1">
-              <div style="font-size:30px;font-weight:800" class="num">6.8 <span style="font-size:14px;color:var(--ink-3);font-weight:500">mmol/L</span></div>
-              <div style="font-size:13px;color:var(--ink-2);margin-top:4px">近 30 天 · 7 次测量<br>参考范围 3.9 - 6.1</div>
+              <div style="font-size:30px;font-weight:800" class="num" id="archive-glucose-value">6.8 <span style="font-size:14px;color:var(--ink-3);font-weight:500">mmol/L</span></div>
+              <div style="font-size:13px;color:var(--ink-2);margin-top:4px"><span id="archive-glucose-meta">近 30 天 · 7 次测量</span><br>参考范围 3.9 - 6.1</div>
             </div>
           </div>
           <div style="margin-top:12px"><button class="btn-ghost" onclick="go('page-metric')">查看趋势详情</button></div>
@@ -912,10 +913,10 @@ input::placeholder{color:#5F746F;opacity:1}
         </div>
         <div class="card" data-card="lipid" style="display:none">
           <div class="card-title">血脂 <span class="badge up">2 项异常</span></div>
-          <div style="font-size:13px;color:var(--ink-2);margin-bottom:8px">最近化验：8 月 18 日 · 市第一人民医院</div>
-          <div class="iv-row"><span class="iv-name">总胆固醇</span><span class="iv-val num" style="color:var(--warn)">5.6</span><span class="iv-unit">mmol/L</span><span class="iv-ref">↑ &lt;5.2</span></div>
-          <div class="iv-row"><span class="iv-name">甘油三酯</span><span class="iv-val num" style="color:var(--warn)">2.1</span><span class="iv-unit">mmol/L</span><span class="iv-ref">↑ &lt;1.7</span></div>
-          <div class="iv-row"><span class="iv-name">低密度脂蛋白</span><span class="iv-val num" style="color:var(--bad)">3.7</span><span class="iv-unit">mmol/L</span><span class="iv-ref">↑ &lt;3.4</span></div>
+          <div style="font-size:13px;color:var(--ink-2);margin-bottom:8px" id="archive-lipid-meta">最近化验：8 月 18 日 · 市第一人民医院</div>
+          <div class="iv-row"><span class="iv-name">总胆固醇</span><span class="iv-val num" id="archive-lipid-total" style="color:var(--warn)">5.6</span><span class="iv-unit">mmol/L</span><span class="iv-ref">↑ &lt;5.2</span></div>
+          <div class="iv-row"><span class="iv-name">甘油三酯</span><span class="iv-val num" id="archive-lipid-triglyceride" style="color:var(--warn)">2.1</span><span class="iv-unit">mmol/L</span><span class="iv-ref">↑ &lt;1.7</span></div>
+          <div class="iv-row"><span class="iv-name">低密度脂蛋白</span><span class="iv-val num" id="archive-lipid-ldl" style="color:var(--bad)">3.7</span><span class="iv-unit">mmol/L</span><span class="iv-ref">↑ &lt;3.4</span></div>
           <div class="iv-row"><span class="iv-name">高密度脂蛋白</span><span class="iv-val num">1.1</span><span class="iv-unit">mmol/L</span><span class="iv-ref">≥1.0</span></div>
           <div style="margin-top:10px"><button class="btn-ghost" onclick="go('page-metric')">查看历史对比</button></div>
         </div>
@@ -930,18 +931,18 @@ input::placeholder{color:#5F746F;opacity:1}
               <div class="ring-num"><b>25%</b><span>达标率</span></div>
             </div>
             <div style="flex:1">
-              <div style="font-size:30px;font-weight:800;color:var(--warn)" class="num">445 <span style="font-size:14px;color:var(--ink-3);font-weight:500">μmol/L</span></div>
-              <div style="font-size:13px;color:var(--ink-2);margin-top:4px">最近化验：8 月 18 日<br>参考 &lt; 420（男）</div>
+              <div style="font-size:30px;font-weight:800;color:var(--warn)" class="num" id="archive-uric-value">445 <span style="font-size:14px;color:var(--ink-3);font-weight:500">μmol/L</span></div>
+              <div style="font-size:13px;color:var(--ink-2);margin-top:4px"><span id="archive-uric-meta">最近化验：8 月 18 日</span><br>参考 &lt; 420（男）</div>
             </div>
           </div>
           <div style="margin-top:12px"><button class="btn-ghost" onclick="go('page-metric')">查看趋势详情</button></div>
         </div>
         <div class="card" data-card="liver" style="display:none">
           <div class="card-title">肝功能 <span class="badge up">1 项异常</span></div>
-          <div style="font-size:13px;color:var(--ink-2);margin-bottom:8px">最近化验：8 月 18 日 · 市第一人民医院</div>
-          <div class="iv-row"><span class="iv-name">谷丙转氨酶</span><span class="iv-val num" style="color:var(--bad)">52</span><span class="iv-unit">U/L</span><span class="iv-ref">↑ &lt;40</span></div>
-          <div class="iv-row"><span class="iv-name">谷草转氨酶</span><span class="iv-val num">38</span><span class="iv-unit">U/L</span><span class="iv-ref">&lt;40</span></div>
-          <div class="iv-row"><span class="iv-name">γ-谷氨酰转肽酶</span><span class="iv-val num">48</span><span class="iv-unit">U/L</span><span class="iv-ref">&lt;50</span></div>
+          <div style="font-size:13px;color:var(--ink-2);margin-bottom:8px" id="archive-liver-meta">最近化验：8 月 18 日 · 市第一人民医院</div>
+          <div class="iv-row"><span class="iv-name">谷丙转氨酶</span><span class="iv-val num" id="archive-liver-alt" style="color:var(--bad)">52</span><span class="iv-unit">U/L</span><span class="iv-ref">↑ &lt;40</span></div>
+          <div class="iv-row"><span class="iv-name">谷草转氨酶</span><span class="iv-val num" id="archive-liver-ast">38</span><span class="iv-unit">U/L</span><span class="iv-ref">&lt;40</span></div>
+          <div class="iv-row"><span class="iv-name">γ-谷氨酰转肽酶</span><span class="iv-val num" id="archive-liver-ggt">48</span><span class="iv-unit">U/L</span><span class="iv-ref">&lt;50</span></div>
           <div style="margin-top:10px;font-size:12.5px;color:var(--ink-2);line-height:1.6;background:var(--warn-bg);border-radius:10px;padding:10px 12px">谷丙转氨酶连续 2 次偏高，与脂肪肝管理相关。建议 3 个月后复查，结合体重控制观察变化。</div>
           <div style="margin-top:12px"><button class="btn-ghost" onclick="go('page-metric')">查看趋势详情</button></div>
         </div>
@@ -2010,7 +2011,7 @@ input::placeholder{color:#5F746F;opacity:1}
           <div class="card-title">报告信息</div>
           <div style="display:flex;flex-direction:column;gap:10px">
             <div style="display:flex;gap:10px">
-              <input aria-label="医院" placeholder="医院名称" value="市第一人民医院" style="flex:1;min-height:44px;border:1px solid var(--line);border-radius:10px;padding:11px 12px;font-size:14px;font-family:var(--font);background:#FAFCFB">
+              <input id="scan-hospital" aria-label="医院" placeholder="医院名称" value="市第一人民医院" style="flex:1;min-height:44px;border:1px solid var(--line);border-radius:10px;padding:11px 12px;font-size:14px;font-family:var(--font);background:#FAFCFB">
               <input aria-label="检查日期" placeholder="检查日期" value="2026-08-24" class="num" style="flex:1;min-height:44px;border:1px solid var(--line);border-radius:10px;padding:11px 12px;font-size:14px;font-family:var(--font);background:#FAFCFB">
             </div>
             <div style="font-size:12px;color:var(--ink-3)">识别为：生化全套 · 自动归类到 血糖 / 血脂 / 尿酸 / 肝功</div>
@@ -2437,6 +2438,101 @@ function restoreScanInputs(){
   });
   document.querySelector('#scan-step2 .card-title .badge').textContent = '10 项已识别';
 }
+function getStoredMetrics(){
+  try{
+    var metrics = JSON.parse(localStorage.getItem('kangfu_metrics') || '{}');
+    return metrics && typeof metrics === 'object' && !Array.isArray(metrics) ? metrics : {};
+  }catch(e){
+    return {};
+  }
+}
+function storedMetricDate(){
+  var date = '';
+  try { date = localStorage.getItem('kangfu_metrics_date') || ''; } catch(e){}
+  return /^\d{4}-\d{2}-\d{2}$/.test(date) ? date.slice(5) : '';
+}
+function setValueWithUnit(id, value, unit){
+  var el = document.getElementById(id);
+  if(!el) return;
+  el.textContent = String(value);
+  var unitEl = document.createElement('span');
+  unitEl.textContent = unit;
+  if(id === 'home-glucose-value'){
+    unitEl.className = 'm-unit';
+  }else{
+    unitEl.style.fontSize = '14px';
+    unitEl.style.color = 'var(--ink-3)';
+    unitEl.style.fontWeight = '500';
+    unitEl.style.marginLeft = '4px';
+  }
+  el.appendChild(unitEl);
+}
+function applyHomeMetrics(){
+  var metrics = getStoredMetrics();
+  if(metrics['空腹血糖'] === undefined || String(metrics['空腹血糖']).trim() === '') return;
+  setValueWithUnit('home-glucose-value', metrics['空腹血糖'], 'mmol/L');
+  var trend = document.getElementById('home-glucose-trend');
+  var date = storedMetricDate();
+  if(trend) trend.textContent = '化验单识别' + (date ? ' · ' + date : '');
+}
+var ARCHIVE_METRIC_FIELDS = [
+  {name:'空腹血糖', id:'archive-glucose-value', unit:'mmol/L', withUnit:true},
+  {name:'总胆固醇', id:'archive-lipid-total', unit:'mmol/L'},
+  {name:'甘油三酯', id:'archive-lipid-triglyceride', unit:'mmol/L'},
+  {name:'低密度脂蛋白', id:'archive-lipid-ldl', unit:'mmol/L'},
+  {name:'血尿酸', id:'archive-uric-value', unit:'μmol/L', withUnit:true},
+  {name:'谷丙转氨酶', id:'archive-liver-alt', unit:'U/L'},
+  {name:'谷草转氨酶', id:'archive-liver-ast', unit:'U/L'},
+  {name:'γ-谷氨酰转肽酶', id:'archive-liver-ggt', unit:'U/L'}
+];
+function renderNewUserArchiveMetrics(metrics){
+  var empty = document.querySelector('#page-archive > .new-user-empty');
+  if(!empty || currentUserMode !== 'new') return;
+  var available = ARCHIVE_METRIC_FIELDS.filter(function(field){
+    return metrics[field.name] !== undefined && String(metrics[field.name]).trim() !== '';
+  });
+  empty.classList.toggle('has-metrics', available.length > 0);
+  if(!available.length){
+    empty.innerHTML = '<div class="empty-value">--<span>暂无数据</span></div><p>完成第一次记录后，这里将显示你的个人数据。</p>';
+    return;
+  }
+  var date = storedMetricDate();
+  var hospital = '';
+  try { hospital = (localStorage.getItem('kangfu_metrics_hospital') || '').trim(); } catch(e){}
+  var source = ['化验单识别', date, hospital].filter(Boolean).join(' · ');
+  var rows = available.map(function(field){
+    return '<div class="iv-row"><span class="iv-name">' + esc(field.name) + '</span>' +
+      '<span class="iv-val num">' + esc(metrics[field.name]) + '</span>' +
+      '<span class="iv-unit">' + esc(field.unit) + '</span></div>';
+  }).join('');
+  empty.innerHTML = '<div class="card-title">最新识别结果</div>' +
+    '<div style="font-size:13px;color:var(--ink-2);margin-bottom:8px">' + esc(source) + '</div>' + rows;
+}
+function applyArchiveMetrics(){
+  var metrics = getStoredMetrics();
+  ARCHIVE_METRIC_FIELDS.forEach(function(field){
+    if(metrics[field.name] === undefined || String(metrics[field.name]).trim() === '') return;
+    if(field.withUnit) setValueWithUnit(field.id, metrics[field.name], field.unit);
+    else document.getElementById(field.id).textContent = String(metrics[field.name]);
+  });
+  var date = storedMetricDate();
+  var hospital = '';
+  try { hospital = (localStorage.getItem('kangfu_metrics_hospital') || '').trim(); } catch(e){}
+  var source = [date, hospital].filter(Boolean).join(' · ');
+  if(source){
+    if(metrics['空腹血糖'] !== undefined) document.getElementById('archive-glucose-meta').textContent = '化验单识别 · ' + source;
+    if(metrics['血尿酸'] !== undefined) document.getElementById('archive-uric-meta').textContent = '最近化验：' + source;
+    if(['总胆固醇','甘油三酯','低密度脂蛋白'].some(function(name){ return metrics[name] !== undefined; })) document.getElementById('archive-lipid-meta').textContent = '最近化验：' + source;
+    if(['谷丙转氨酶','谷草转氨酶','γ-谷氨酰转肽酶'].some(function(name){ return metrics[name] !== undefined; })) document.getElementById('archive-liver-meta').textContent = '最近化验：' + source;
+  }
+  renderNewUserArchiveMetrics(metrics);
+}
+function localDateString(){
+  var now = new Date();
+  var month = String(now.getMonth() + 1).padStart(2, '0');
+  var day = String(now.getDate()).padStart(2, '0');
+  return now.getFullYear() + '-' + month + '-' + day;
+}
 document.getElementById('scan-file').addEventListener('change', function(){
   if(!this.files || !this.files.length) return;
   scanFiles = Array.from(this.files);
@@ -2549,17 +2645,29 @@ async function recognizeAlbumFile(file, myToken, ocr){
   }
 }
 function saveScan(){
-  // 从确认表读取实际数值，统计归档项数
+  // 从确认表读取用户核对后的实际数值并归档
   var rows = document.querySelectorAll('#scan-step2 .ct-row');
-  var count = 0;
+  var metrics = {};
   rows.forEach(function(row){
     var v = row.querySelector('input').value.trim();
-    if(v !== '') count++;
+    if(v !== '') metrics[row.querySelector('.ct-name').textContent.trim()] = v;
   });
+  var count = Object.keys(metrics).length;
+  if(count > 0){
+    try{
+      localStorage.setItem('kangfu_metrics', JSON.stringify(metrics));
+      localStorage.setItem('kangfu_metrics_date', localDateString());
+      var hospital = document.getElementById('scan-hospital').value.trim();
+      if(hospital) localStorage.setItem('kangfu_metrics_hospital', hospital);
+    }catch(e){}
+    applyHomeMetrics();
+    applyArchiveMetrics();
+  }
+  var resultMessage = count > 0 ? '已归档 ' + count + ' 项指标' : '未识别到可归档的指标';
   if(scanFiles.length > 1 && scanIdx < scanFiles.length - 1){
     var archived = scanIdx + 1;
     scanIdx++;
-    toast('第 ' + archived + ' 张已归档，继续第 ' + (scanIdx + 1) + ' 张');
+    toast('第 ' + archived + ' 张已归档，继续第 ' + (scanIdx + 1) + ' 张 · ' + resultMessage);
     restoreScanInputs();
     document.getElementById('scan-step1').style.display='';
     document.getElementById('scan-step2').style.display='none';
@@ -2570,7 +2678,7 @@ function saveScan(){
     return;
   }
   var reportCount = scanFiles.length;
-  toast(reportCount > 1 ? '已归档 ' + reportCount + ' 张报告' : '已归档 ' + count + ' 项指标，异常项已标记');
+  toast(reportCount > 1 ? '已归档 ' + reportCount + ' 张报告 · ' + resultMessage : resultMessage);
   var myToken = scanToken;
   setTimeout(function(){
     if(myToken !== scanToken) return;
@@ -2797,6 +2905,8 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   });
   document.getElementById('diet-note').setAttribute('aria-label','饮食备注');
+  applyHomeMetrics();
+  applyArchiveMetrics();
   // 对比汇总动态计算
   calcCompareSummary();
   // 键盘可达性：非原生可点击元素补 role/tabindex/键盘处理（reminder-entry 已有内联处理，跳过避免双绑定）
@@ -3022,6 +3132,8 @@ function applyUserMode(user){
     var switchRow2 = document.getElementById('switch-user-row');
     if(switchRow2) switchRow2.querySelector('.s-main').innerHTML = '切换用户<div class="s-sub">退出当前档案，重新体验注册流程</div>';
   }
+  applyHomeMetrics();
+  applyArchiveMetrics();
 }
 function switchUser(){
   // 不提前删除旧档案；建档完成时才会覆盖存档

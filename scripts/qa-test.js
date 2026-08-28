@@ -137,7 +137,13 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     ocrFetchCalls.push({url:url, method:options.method, file:file && file.name, signal:options.signal});
     if(file && file.name === 'offline.jpg') return Promise.reject(new Error('offline'));
     var values = file && file.name === 'report-1.jpg' ? ['6.1','5.1'] :
-      file && file.name === 'report-2.jpg' ? ['7.2','6.0'] : ['6.8','5.6'];
+      file && file.name === 'report-2.jpg' ? ['7.2','6.0'] : ['7.1','5.2'];
+    var extraLines = file && file.name === 'report.jpg' ? [
+      '尿酸 UA', '401', '208-428 umol/L',
+      '谷丙转氨酶 ALT', '31', '<40 U/L',
+      '谷草转氨酶 AST', '29', '<40 U/L',
+      'γ-谷氨酰转肽酶 GGT', '37', '<50 U/L'
+    ] : [];
     return Promise.resolve({
       ok: true,
       status: 200,
@@ -145,7 +151,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
         return Promise.resolve({ok:true, lines:[
           '葡萄糖 GLU', values[0], '3.9-6.1 mmol/L', 'H',
           '总胆固醇 TC', values[1], '<5.2 mmol/L'
-        ], time_ms:123});
+        ].concat(extraLines), time_ms:123});
       }
     });
   };
@@ -163,11 +169,34 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   await sleep(1100); // 等待 compressImage 兜底（jsdom 无 Image 加载）
   assert('相册选图后显示指标确认页', !!scanFile && doc.querySelector('#scan-step2').style.display !== 'none');
   assert('相册 OCR 通过 multipart file 请求本机接口', ocrFetchCalls[0].url === win.eval('OCR_API') && ocrFetchCalls[0].method === 'POST' && ocrFetchCalls[0].file === 'report.jpg');
-  assert('真实 OCR 数值填入确认页', doc.querySelectorAll('#scan-step2 .ct-row input')[0].value === '6.8' && doc.querySelectorAll('#scan-step2 .ct-row input')[1].value === '5.6');
+  assert('真实 OCR 数值填入确认页', doc.querySelectorAll('#scan-step2 .ct-row input')[0].value === '7.1' && doc.querySelectorAll('#scan-step2 .ct-row input')[1].value === '5.2');
   assert('OCR 缺项显示待补充且不保留演示值', doc.querySelectorAll('#scan-step2 .ct-row input')[2].value === '' && doc.querySelectorAll('#scan-step2 .ct-row input')[2].placeholder === '待补充');
-  assert('真实 OCR 成功提示包含识别项数', doc.getElementById('toast').textContent.indexOf('识别完成（本地OCR · 2 项）') >= 0);
+  assert('真实 OCR 成功提示包含识别项数', doc.getElementById('toast').textContent.indexOf('识别完成（本地OCR · 6 项）') >= 0);
   var scanFileStatus = doc.getElementById('scan-file-status');
   assert('已选提示包含文件名', !!scanFileStatus && scanFileStatus.textContent.indexOf('report.jpg') >= 0);
+  doc.querySelector('#scan-step2 input[aria-label="医院"]').value = '测试医院';
+  doc.querySelector('#scan-step2 .btn-primary').click();
+  var storedMetrics = JSON.parse(win.localStorage.getItem('kangfu_metrics') || '{}');
+  assert('OCR 归档写入空腹血糖', storedMetrics['空腹血糖'] === '7.1');
+  assert('OCR 归档写入报告日期与医院', /^\d{4}-\d{2}-\d{2}$/.test(win.localStorage.getItem('kangfu_metrics_date') || '') && win.localStorage.getItem('kangfu_metrics_hospital') === '测试医院');
+  assert('OCR 归档提示包含指标数', doc.getElementById('toast').textContent.indexOf('已归档 6 项指标') >= 0);
+  await sleep(1000);
+  assert('OCR 归档后首页显示识别血糖', visible('screen-home') && !!doc.getElementById('home-glucose-value') && doc.getElementById('home-glucose-value').textContent.indexOf('7.1') >= 0);
+  assert('OCR 归档后首页标注识别日期', !!doc.getElementById('home-glucose-trend') && doc.getElementById('home-glucose-trend').textContent.indexOf('化验单识别') >= 0);
+  doc.querySelector('.tabbar .tab[data-tab="archive"]').click();
+  assert('OCR 归档后档案血脂显示识别值', !!doc.getElementById('archive-lipid-total') && doc.getElementById('archive-lipid-total').textContent === '5.2');
+  assert('OCR 归档后档案尿酸显示识别值', !!doc.getElementById('archive-uric-value') && doc.getElementById('archive-uric-value').textContent.indexOf('401') >= 0);
+  assert('OCR 归档后档案肝功显示识别值', !!doc.getElementById('archive-liver-alt') && doc.getElementById('archive-liver-alt').textContent === '31' && !!doc.getElementById('archive-liver-ggt') && doc.getElementById('archive-liver-ggt').textContent === '37');
+  doc.querySelector('.tabbar .tab[data-tab="home"]').click();
+  win.localStorage.removeItem('kangfu_metrics');
+  win.localStorage.removeItem('kangfu_metrics_date');
+  win.localStorage.removeItem('kangfu_metrics_hospital');
+  win.eval('startScan(); applyOcrResults(parseOcrLines([]));');
+  doc.querySelector('#scan-step2 .btn-primary').click();
+  assert('全空归档提示未识别到指标', doc.getElementById('toast').textContent.indexOf('未识别到可归档的指标') >= 0);
+  assert('全空归档不写指标存储', win.localStorage.getItem('kangfu_metrics') === null);
+  await sleep(1000);
+  win.eval('startScan()');
   win.eval('resetScan()');
   assert('重新拍后清除已选提示', !!scanFileStatus && scanFileStatus.style.display === 'none' && scanFileStatus.textContent === '');
 
@@ -403,6 +432,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   await sleep(1000);
   assert('建档完成进入首页', visible('screen-home'));
   assert('首页显示新用户名', doc.getElementById('home-member-name').textContent === '王秀兰');
+  assert('新用户首页保留本机识别血糖', doc.getElementById('home-glucose-value').textContent.indexOf('7.2') >= 0);
   const newMeals = Array.from(doc.querySelectorAll('#page-diet .meal-card'));
   const emptyDataPages = ['archive','report','summary','compare','family','meds','metric','insight','reportdetail','devices'];
   assert('新用户跨页数据为空状态',
@@ -413,6 +443,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     doc.querySelector('#screen-diet .topbar .sub').textContent.indexOf('已记录 0 餐') >= 0 &&
     doc.querySelector('#page-diet .new-diet-stat .s-val').textContent.trim().indexOf('0') === 0 &&
     emptyDataPages.every(id => !!doc.querySelector('#page-' + id + ' > .new-user-empty')));
+  assert('新用户档案空态显示本机识别值', doc.querySelector('#page-archive > .new-user-empty').textContent.indexOf('7.2') >= 0 && doc.querySelector('#page-archive > .new-user-empty').textContent.indexOf('6.0') >= 0);
   assert('我的页档案已更新', doc.getElementById('mine-profile-meta').textContent.indexOf('王秀兰') >= 0 || doc.getElementById('mine-profile-meta').textContent.indexOf('1960') >= 0);
 
   function stackReset(){ win.eval('stack=["home"];'); }
