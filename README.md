@@ -8,10 +8,11 @@
 |---|---|
 | **公网（手机真机体验）** | https://jiangsky168.github.io/kangji-app/（历史地址，沿用"康迹"拼音 slug） |
 | **安卓 APK 下载页** | https://jiangsky168.github.io/kangji-app/download.html |
+| **Release v0.1 直连** | https://github.com/jiangsky168/kangji-app/releases/tag/v0.1 |
 | 局域网（Mac 与手机同 WiFi） | http://192.168.1.56:8000/ |
 | 仓库 | https://github.com/jiangsky168/kangji-app |
 
-原型为单文件 HTML，含 18 个页面、10 条核心流程（拍照归档化验单、历次报告对比、AI 预问诊、饮食拍照、家庭档案等），数据为演示数据。
+原型为单文件 HTML，含 19 个页面、10 条核心流程（拍照归档化验单、历次报告对比、AI 预问诊、饮食拍照、家庭档案等），数据为演示数据。
 
 ## 📁 项目文件
 
@@ -22,7 +23,7 @@
 | `慢病管理App产品功能清单草案.md` | 产品方案：定位/功能分层/数据模型/OCR映射/阈值表 |
 | `慢病管理App竞品功能对比.md` | 竞品调研：26 项功能 × 5 个竞品对比矩阵 |
 | `TECHDOC.md` | 技术方案：选型/成本/合规/排期/部署现状 |
-| `scripts/qa-test.js` | jsdom 回归测试（71 项） |
+| `scripts/qa-test.js` | jsdom 回归测试（98 项） |
 | `TASK_V2.md` / `TASK_TECH.md` | Codex 开发任务书（历史） |
 
 ## 🔄 更新发布
@@ -31,15 +32,18 @@
 # 改完原型后
 cp 慢病管理App原型.html index.html   # 同步部署入口
 git add -A && git commit -m "描述"
-git push origin main                  # Pages 约 1 分钟自动更新
+git push origin main                  # 推送源码分支
 # GitHub 访问需代理：export HTTPS_PROXY=http://127.0.0.1:7897
 ```
+
+公网页面当前从 `gh-pages` 分支根目录发布。发版时需将 `index.html`、`download.html`、`kangfu.apk`、`.nojekyll`、`manifest.json`、`sw.js` 和 `pwa/` 同步到该分支，不能只依赖 `main` 分支的 Actions。
 
 ## ✅ 质量状态
 
 - Codex 审查 + 修复：4/10 → 通过全部修复
-- jsdom 回归测试：71/71 通过（含 V2 功能测试）
-- 已上线 GitHub Pages，公网渲染验证通过
+- jsdom 回归测试：98/98 通过（含 V2 功能和近三轮修复回归）
+- GitHub Pages 源为 `gh-pages` 根目录；2026-08-28 最新 `pages-build-deployment` 成功，Pages API 状态为 `built`
+- `main` 分支自定义 `Deploy Pages` 仍有 2026-08-26 的排队记录，不是当前公网发布链路；APK 可通过 Release v0.1 兜底下载
 
 ## 🧭 产品定位（摘要）
 

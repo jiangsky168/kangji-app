@@ -387,18 +387,22 @@ Flutter App
 - MVP 不需要 Elasticsearch。医院、报告和患教内容先用 PostgreSQL 全文检索或前缀检索。
 - 当数据库 p95 因重复读明显超标时再加缓存；当搜索需要中文分词、同义词和复杂排序且 PostgreSQL 无法满足时再加搜索服务。
 
-### 8.5 原型阶段部署现状（2026-08-26）
+### 8.5 原型阶段部署现状（2026-08-28）
 
 高保真原型（单文件 HTML）已上线，用于手机真机体验和团队评审，**非生产环境**：
 
 | 项 | 内容 |
 |---|---|
 | 公网地址 | https://jiangsky168.github.io/kangji-app/ |
-| 托管方式 | GitHub Pages（public 仓库 jiangsky168/kangji-app，main 分支根目录，legacy 构建） |
+| 当前状态 | Pages API 为 `built`；2026-08-28 最新 `pages-build-deployment` 从 `gh-pages` 成功完成 |
+| 托管方式 | GitHub Pages（public 仓库 jiangsky168/kangji-app，`gh-pages` 分支根目录，legacy 构建） |
 | 局域网地址 | http://192.168.1.56:8000/（本机 python http.server，Mac 与手机同 WiFi 时可用） |
-| 入口文件 | 仓库根目录 index.html（慢病管理App原型.html 的副本，部署用） |
-| 更新方式 | 修改后 `git push origin main`，Pages 约 1 分钟自动重建 |
+| 发布集 | `index.html`、`download.html`、`kangfu.apk`、`.nojekyll`、`manifest.json`、`sw.js` 和 `pwa/`，共 10 个文件 |
+| 更新方式 | 源码推送 `main`；公网发版需另外同步最小静态集并更新 `gh-pages` |
+| APK 兜底 | GitHub Release v0.1：https://github.com/jiangsky168/kangji-app/releases/tag/v0.1 |
 | 注意事项 | 原型含演示数据；GitHub 访问需代理（HTTPS_PROXY=http://127.0.0.1:7897） |
+
+Actions 异常说明：2026-08-26 从 `main` 构建时曾出现 `failure` 和 `startup_failure`，同日两条自定义 `Deploy Pages` 运行至今仍为 `queued`。2026-08-28 已将 Pages 源切换为精简后的 `gh-pages` 分支并成功构建，因此上述历史排队任务不代表当前 Pages 失败。
 
 部署踩坑记录（供以后复用）：
 1. gh 交互登录在非交互环境不可用，改用 GitHub OAuth 设备流 API（client_id 用 gh CLI 公开 ID，curl 带代理），用户浏览器输 code 授权后轮询换 token
