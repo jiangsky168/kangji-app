@@ -5,3 +5,14 @@ apk/android/build/
 apk/android/app/build/
 apk/android/capacitor-cordova-android-plugins/build/
 apk/*.log
+
+# iOS 工程与本机生成文件
+Pods/
+DerivedData/
+xcuserdata/
+*.xcuserstate
+ios/App/Pods/
+
+# 失败的 Capacitor 试验工程
+apk/android-capacitor7-failed/
+apk/android-capacitor8-failed/
