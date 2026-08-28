@@ -288,13 +288,44 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   function stackReset(){ win.eval('stack=["home"];'); }
 
   console.log('=== 12. 修复项回归（全面检查后） ===');
+  // 启动存档校验：合法边界放行，损坏存档清除并进入引导
+  const validBoundaryUser = { mode:'new', name:'边界用户', gender:'女', year:1920, height:220, conditions:['高血压','糖尿病','血脂异常','高尿酸','脂肪肝'] };
+  const invalidSavedUsers = [
+    { ...validBoundaryUser, name:' ' },
+    { ...validBoundaryUser, name:'123456789012345678901' },
+    { ...validBoundaryUser, gender:'其他' },
+    { ...validBoundaryUser, year:'1960' },
+    { ...validBoundaryUser, year:1919 },
+    { ...validBoundaryUser, year:2017 },
+    { ...validBoundaryUser, year:1960.5 },
+    { ...validBoundaryUser, height:'165' },
+    { ...validBoundaryUser, height:119 },
+    { ...validBoundaryUser, height:221 },
+    { ...validBoundaryUser, height:165.5 },
+    { ...validBoundaryUser, conditions:['高血压','糖尿病','血脂异常','高尿酸','脂肪肝','高血压'] },
+    { ...validBoundaryUser, conditions:['未知病种'] }
+  ];
+  const strictArchiveValidation = win.isValidSavedUser(validBoundaryUser) &&
+    win.isValidSavedUser({ mode:'demo', name:'张卫东' }) &&
+    invalidSavedUsers.every(user => !win.isValidSavedUser(user));
+  const corruptDom = new JSDOM(html, {
+    runScripts: 'dangerously',
+    pretendToBeVisual: true,
+    url: 'http://corrupt.local/',
+    beforeParse(window) {
+      window.localStorage.setItem('kangfu_user', JSON.stringify({ ...validBoundaryUser, conditions:['未知病种'] }));
+    }
+  });
+  const corruptArchiveCleared = corruptDom.window.localStorage.getItem('kangfu_user') === null;
+  const corruptArchiveOnboard = corruptDom.window.document.getElementById('screen-onboard').style.display !== 'none';
+  corruptDom.window.close();
   // 表单验证：空手机号阻止
   stackReset();
   win.eval('switchUser()');
   doc.querySelector('#ob-step1 .btn-primary').click();
   doc.getElementById('ob-phone').value = '123';
   doc.querySelector('#ob-step2 .btn-primary').click();
-  assert('无效手机号被拦截', doc.getElementById('ob-step2').style.display !== 'none');
+  assert('损坏存档清除且无效手机号被拦截', strictArchiveValidation && corruptArchiveCleared && corruptArchiveOnboard && doc.getElementById('ob-step2').style.display !== 'none');
   doc.getElementById('ob-phone').value = '13800138000';
   doc.querySelector('#ob-step2 .btn-primary').click();
   assert('有效手机号进入步骤3', doc.getElementById('ob-step3').style.display !== 'none');

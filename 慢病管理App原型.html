@@ -2580,6 +2580,7 @@ function calcCompareSummary(){
 // ============ 新用户引导 ============
 var obGenderVal = '男';
 var obConds = ['高血压','糖尿病'];
+var KNOWN_CONDITIONS = ['高血压','糖尿病','血脂异常','高尿酸','脂肪肝'];
 var obToken = 0;
 var DATA_PAGES = ['home','archive','report','summary','compare','family','meds','metric','diet'];
 var EMPTY_DATA_PAGES = ['archive','report','summary','compare','family','meds','metric','insight','reportdetail','devices'];
@@ -2664,8 +2665,8 @@ function finishOnboarding(){
   obToken++;
   var myToken = obToken;
   var name = (document.getElementById('ob-name').value || '').trim() || '新用户';
-  var year = document.getElementById('ob-year').value;
-  var height = document.getElementById('ob-height').value;
+  var year = parseInt(document.getElementById('ob-year').value, 10);
+  var height = parseInt(document.getElementById('ob-height').value, 10);
   var user = {
     mode: 'new',
     name: name,
@@ -2790,16 +2791,27 @@ function switchUser(){
 }
 
 // ============ 启动检测 ============
+function isValidSavedUser(saved){
+  if(!saved || (saved.mode !== 'demo' && saved.mode !== 'new')) return false;
+  if(typeof saved.name !== 'string') return false;
+  var nameLength = saved.name.trim().length;
+  if(nameLength < 1 || nameLength > 20) return false;
+  if(saved.mode === 'demo') return true;
+  if(saved.gender !== '男' && saved.gender !== '女') return false;
+  if(typeof saved.year !== 'number' || !Number.isInteger(saved.year) || saved.year < 1920 || saved.year > 2016) return false;
+  if(typeof saved.height !== 'number' || !Number.isInteger(saved.height) || saved.height < 120 || saved.height > 220) return false;
+  if(!Array.isArray(saved.conditions) || saved.conditions.length > 5) return false;
+  return saved.conditions.every(function(c){
+    return typeof c === 'string' && KNOWN_CONDITIONS.indexOf(c) >= 0;
+  });
+}
 (function(){
   var saved = null;
   try { saved = JSON.parse(localStorage.getItem('kangfu_user') || 'null'); } catch(e){ saved = null; }
-  // 存档校验：mode/name/conditions 全部合法才视为有效；损坏则清除并进入引导
-  var valid = saved && saved.mode && (saved.mode==='demo' || saved.mode==='new')
-    && typeof saved.name === 'string' && saved.name.trim().length > 0;
-  if(valid && saved.mode==='new'){
-    valid = Array.isArray(saved.conditions) && saved.conditions.every(function(c){ return typeof c === 'string' && c.length > 0; });
-  }
+  // 新档案所有字段通过类型、范围和白名单校验才视为有效
+  var valid = isValidSavedUser(saved);
   if(valid){
+    saved.name = saved.name.trim();
     applyUserMode(saved);
   }else{
     try { localStorage.removeItem('kangfu_user'); } catch(e){}
