@@ -1584,6 +1584,16 @@ input::placeholder{color:#5F746F;opacity:1}
           <div class="s-main">切换用户<div class="s-sub">退出当前档案，重新体验注册流程</div></div>
           <span class="s-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></span>
         </div>
+        <div class="set-row" onclick="toggleOcrAddr()" id="ocr-addr-row">
+          <span class="s-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 6.5a5 5 0 0 1 0 7M17 4a9 9 0 0 1 0 16M9.5 8.5 5 13h4l-1.5 4.5L13 12H9z"/></svg></span>
+          <div class="s-main">识别服务地址<div class="s-sub" id="ocr-addr-sub">http://192.168.1.211:8001/ocr</div></div>
+          <span class="s-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></span>
+        </div>
+        <div id="ocr-addr-editor" style="display:none;padding:10px 2px">
+          <input id="ocr-addr-input" aria-label="识别服务地址" type="text" value="" style="width:100%;min-height:44px;border:1.5px solid var(--line);border-radius:12px;padding:12px;font-size:14px;font-family:var(--font);background:var(--surface);color:var(--ink)">
+          <button class="btn-primary" style="margin-top:10px;width:100%" onclick="saveOcrAddr()">保存地址</button>
+          <div style="font-size:12px;color:var(--ink-3);margin-top:8px;line-height:1.6">局域网 OCR 服务地址（电脑上运行识别服务后显示）。手机与电脑需在同一 WiFi。</div>
+        </div>
         <div class="set-row devices-entry" onclick="go('page-devices')">
           <span class="s-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3h8v18H8z"/><path d="M10 6h4M11 18h2"/></svg></span>
           <div class="s-main">数据与设备<div class="s-sub" id="devices-summary">2 个数据源已连接</div></div>
@@ -2319,7 +2329,27 @@ var scanFrom = 'home';
 var scanToken = 0;
 var scanFiles = [];
 var scanIdx = 0;
-var OCR_API = (localStorage.getItem('ocr_api') || 'http://192.168.1.56:8001/ocr');
+var OCR_API = (localStorage.getItem('ocr_api') || 'http://192.168.1.211:8001/ocr');
+function toggleOcrAddr(){
+  var ed = document.getElementById('ocr-addr-editor');
+  var show = ed.style.display === 'none';
+  ed.style.display = show ? '' : 'none';
+  if(show){
+    var inp = document.getElementById('ocr-addr-input');
+    inp.value = OCR_API;
+    inp.focus();
+  }
+}
+function saveOcrAddr(){
+  var v = document.getElementById('ocr-addr-input').value.trim();
+  if(!v){ toast('请输入识别服务地址'); return; }
+  if(v.indexOf('http') !== 0){ v = 'http://' + v; }
+  try { localStorage.setItem('ocr_api', v); } catch(e){}
+  OCR_API = v;
+  document.getElementById('ocr-addr-sub').textContent = v;
+  document.getElementById('ocr-addr-editor').style.display = 'none';
+  toast('识别服务地址已更新');
+}
 var OCR_METRICS = [
   {name:'空腹血糖', aliases:['葡萄糖','GLU','空腹血糖','Glu'], unit:'mmol/L', ref:'<6.1'},
   {name:'总胆固醇', aliases:['总胆固醇','TC','胆固醇'], unit:'mmol/L', ref:'<5.2'},

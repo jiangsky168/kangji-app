@@ -115,7 +115,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   assert('相册选图入口存在', !!albumButton);
   var scanFile = doc.getElementById('scan-file');
   assert('相册文件输入支持多选', !!scanFile && scanFile.hasAttribute('multiple'));
-  assert('OCR API 使用本机服务默认地址', win.eval('OCR_API') === 'http://192.168.1.56:8001/ocr');
+  assert('OCR API 使用本机服务默认地址', win.eval('OCR_API') === 'http://192.168.1.211:8001/ocr');
   var parsed = win.parseOcrLines([
     '市第一人民医院', '检验报告单',
     '葡萄糖 GLU', '6.8', '3.9-6.1 mmol/L', 'H',
