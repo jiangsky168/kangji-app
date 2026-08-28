@@ -273,7 +273,16 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   await sleep(1000);
   assert('建档完成进入首页', visible('screen-home'));
   assert('首页显示新用户名', doc.getElementById('home-member-name').textContent === '王秀兰');
-  assert('首页指标为空状态', doc.querySelectorAll('#page-home .m-value')[0].textContent.indexOf('--') === 0);
+  const newMeals = Array.from(doc.querySelectorAll('#page-diet .meal-card'));
+  const emptyDataPages = ['archive','report','summary','compare','family','meds','metric','insight','reportdetail','devices'];
+  assert('新用户跨页数据为空状态',
+    doc.querySelectorAll('#page-home .m-value')[0].textContent.indexOf('--') === 0 &&
+    doc.body.classList.contains('new-user-mode') &&
+    newMeals.length === 3 &&
+    newMeals.every(card => card.getAttribute('data-recorded') === '0' && !card.querySelector('.new-meal-content.meal-photo').getAttribute('style')) &&
+    doc.querySelector('#screen-diet .topbar .sub').textContent.indexOf('已记录 0 餐') >= 0 &&
+    doc.querySelector('#page-diet .new-diet-stat .s-val').textContent.trim().indexOf('0') === 0 &&
+    emptyDataPages.every(id => !!doc.querySelector('#page-' + id + ' > .new-user-empty')));
   assert('我的页档案已更新', doc.getElementById('mine-profile-meta').textContent.indexOf('王秀兰') >= 0 || doc.getElementById('mine-profile-meta').textContent.indexOf('1960') >= 0);
 
   function stackReset(){ win.eval('stack=["home"];'); }
@@ -328,14 +337,14 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   win.eval('stack=["home"]; showScreen("home"); startDietAdd(); saveDiet(); switchTab("report");');
   await sleep(1200);
   assert('导航后旧保存定时器被取消(停在周报)', visible('screen-report'));
-  // 餐数统计基于 data-recorded：初始2餐+加餐后应为3餐
+  // 餐数统计基于 data-recorded：新用户初始0餐，午餐+加餐后应为2餐
   doc.querySelector('.tabbar .tab[data-tab="diet"]').click();
   // 先加餐：从首页进入饮食流程选加餐保存
   doc.querySelector('.tabbar .tab[data-tab="home"]').click();
   win.eval('startDietAdd(); var bs=document.querySelectorAll("#diet-meal-seg button"); bs.forEach(function(b){b.classList.remove("on");}); bs[bs.length-1].classList.add("on"); saveDiet(); switchTab("diet");');
   await sleep(1200);
   var mealText = doc.querySelector('#screen-diet .sub').textContent;
-  assert('加餐后餐数=3', mealText.indexOf('已记录 3 餐') >= 0);
+  assert('新用户加餐后餐数=2', mealText.indexOf('已记录 2 餐') >= 0);
   // 加餐卡在晚餐卡之后、统计卡之前
   var snack = doc.getElementById('diet-snack');
   assert('加餐卡存在', !!snack);
@@ -345,8 +354,12 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   win.eval('switchUser()');
   var condStates = [];
   doc.querySelectorAll('#ob-step4 .cond-opt').forEach(function(c){ condStates.push(c.getAttribute('aria-pressed')); });
-  assert('重置后aria-pressed同步(高血糖糖尿病=true)', condStates[0]==='true' && condStates[1]==='true' && condStates[2]==='false');
   win.eval('enterDemo()');
+  assert('重置状态同步且切回演示恢复饮食',
+    condStates[0]==='true' && condStates[1]==='true' && condStates[2]==='false' &&
+    doc.getElementById('diet-breakfast').getAttribute('data-recorded') === '1' &&
+    doc.getElementById('diet-lunch').getAttribute('data-recorded') === '1' &&
+    doc.querySelector('#screen-diet .topbar .sub').textContent.indexOf('已记录 2 餐') >= 0);
   // 重拍恢复初始值：改一个值再重拍
   doc.querySelector('.tabbar .tab[data-tab="home"]').click();
   doc.querySelector('#page-home .btn-primary').click();

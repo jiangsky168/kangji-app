@@ -412,6 +412,26 @@ body{
   border-radius:var(--r-ctl);padding:10px 14px;font-size:12.5px;font-weight:600;
   line-height:1.6;margin-bottom:12px;
 }
+.new-user-empty{
+  display:none;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card);
+  padding:28px 18px;text-align:center;box-shadow:var(--shadow)
+}
+.new-user-empty .empty-value{font-size:28px;font-weight:800;color:var(--ink-2)}
+.new-user-empty .empty-value span{display:block;font-size:14px;font-weight:600;color:var(--ink-3);margin-top:4px}
+.new-user-empty p{font-size:13px;color:var(--ink-3);line-height:1.65;margin-top:10px}
+body.new-user-mode .data-page > :not(.topbar):not(.demo-banner):not(.new-user-empty){display:none!important}
+body.new-user-mode .data-page > .new-user-empty{display:block!important}
+body.new-user-mode .demo-meal-content,body.new-user-mode .demo-diet-stat{display:none!important}
+.new-meal-content,.new-diet-stat{display:none!important}
+body.new-user-mode .new-meal-content.meal-photo{display:flex!important}
+body.new-user-mode .new-meal-content.meal-info{display:block!important}
+body.new-user-mode .new-diet-stat.card-title{display:flex!important}
+body.new-user-mode .new-diet-stat.stat-grid{display:grid!important}
+.meal-photo.empty{
+  align-items:center;justify-content:center;background:none!important;border:1px dashed var(--line);
+  color:var(--ink-3)
+}
+.meal-photo.empty span{background:transparent;padding:0;backdrop-filter:none}
 
 /* 拍照流程 */
 .camera-view{
@@ -2348,6 +2368,92 @@ function dietMeal(el){
   el.classList.add('on');
 }
 function chip(el){ el.classList.toggle('on'); }
+var currentUserMode = 'demo';
+function buildEmptyMealContent(card, meal){
+  var photo = card.querySelector('.new-meal-content.meal-photo');
+  var info = card.querySelector('.new-meal-content.meal-info');
+  if(!photo || !info) return;
+  photo.className = 'meal-photo empty new-meal-content';
+  photo.removeAttribute('style');
+  photo.innerHTML = '<span>'+meal+'</span>';
+  info.innerHTML = '<div class="m-head"><span class="m-name">未记录</span><span class="m-time num">--:--</span></div>'+
+    '<div class="m-note">拍照记录本餐后显示</div><div class="m-tags"><span class="tag flat-tag">待记录</span></div>';
+}
+function prepareDietCard(card, meal){
+  if(card.getAttribute('data-mode-ready')==='1') return;
+  card.setAttribute('data-mode-ready','1');
+  card.setAttribute('data-meal', meal);
+  card.setAttribute('data-demo-recorded', card.getAttribute('data-recorded') || '0');
+  card.setAttribute('data-new-recorded','0');
+  Array.prototype.forEach.call(card.children, function(child){ child.classList.add('demo-meal-content'); });
+  var photo = document.createElement('div');
+  photo.className = 'meal-photo empty new-meal-content';
+  var info = document.createElement('div');
+  info.className = 'meal-info new-meal-content';
+  card.appendChild(photo);
+  card.appendChild(info);
+  buildEmptyMealContent(card, meal);
+}
+function ensureDietModeContent(){
+  var meals = { 'diet-breakfast':'早餐', 'diet-lunch':'午餐', 'diet-dinner':'晚餐' };
+  Object.keys(meals).forEach(function(id){
+    var card = document.getElementById(id);
+    if(card) prepareDietCard(card, meals[id]);
+  });
+  var statGrid = document.querySelector('#page-diet .stat-grid');
+  var statCard = statGrid ? statGrid.closest('.card') : null;
+  if(statCard && statCard.getAttribute('data-mode-ready')!=='1'){
+    statCard.setAttribute('data-mode-ready','1');
+    Array.prototype.forEach.call(statCard.children, function(child){ child.classList.add('demo-diet-stat'); });
+    var title = document.createElement('div');
+    title.className = 'card-title new-diet-stat';
+    title.textContent = '本周饮食统计';
+    var grid = document.createElement('div');
+    grid.className = 'stat-grid new-diet-stat';
+    grid.innerHTML = '<div class="stat"><div class="s-label">记录天数</div><div class="s-val num">0<span style="font-size:13px;color:var(--ink-3);font-weight:500"> / 7 天</span></div><div class="s-sub">暂无数据</div></div>'+
+      '<div class="stat"><div class="s-label">标签命中</div><div class="s-val">--</div><div class="s-sub">暂无数据</div></div>';
+    statCard.appendChild(title);
+    statCard.appendChild(grid);
+  }
+}
+function createDietSnack(){
+  var target = document.createElement('div');
+  target.className = 'card meal-card';
+  target.id = 'diet-snack';
+  target.style.marginTop = '12px';
+  target.style.display = 'none';
+  target.setAttribute('data-recorded','0');
+  var demoPhoto = document.createElement('div');
+  demoPhoto.className = 'meal-photo empty';
+  var demoInfo = document.createElement('div');
+  demoInfo.className = 'meal-info';
+  target.appendChild(demoPhoto);
+  target.appendChild(demoInfo);
+  prepareDietCard(target, '加餐');
+  var dinner = document.getElementById('diet-dinner');
+  if(dinner && dinner.parentNode) dinner.parentNode.insertBefore(target, dinner.nextElementSibling);
+  return target;
+}
+function updateDietSummary(){
+  var recorded = document.querySelectorAll('#screen-diet .meal-card[data-recorded="1"]').length;
+  var summary = document.querySelector('#screen-diet .topbar .sub');
+  if(summary) summary.textContent = '8 月 24 日 · 已记录 ' + recorded + ' 餐';
+}
+function applyDietMode(isNew){
+  ensureDietModeContent();
+  var mode = isNew ? 'new' : 'demo';
+  document.querySelectorAll('#page-diet .meal-card').forEach(function(card){
+    if(isNew){
+      card.setAttribute('data-new-recorded','0');
+      buildEmptyMealContent(card, card.getAttribute('data-meal') || '');
+    }
+    var recorded = card.getAttribute('data-'+mode+'-recorded') || '0';
+    card.setAttribute('data-recorded', recorded);
+    card.style.opacity = recorded === '1' ? '1' : '.55';
+    if(card.id === 'diet-snack') card.style.display = recorded === '1' ? 'flex' : 'none';
+  });
+  updateDietSummary();
+}
 function saveDiet(){
   var mealBtn = document.querySelector('#diet-meal-seg button.on');
   var meal = mealBtn ? mealBtn.textContent : '晚餐';
@@ -2363,44 +2469,31 @@ function saveDiet(){
   var photoBg = {'早餐':'linear-gradient(150deg,#E8B45A,#C97B2D)','午餐':'linear-gradient(150deg,#B96B4E,#8A4028)','晚餐':'linear-gradient(150deg,#6B7F5E,#4A5C40)','加餐':'linear-gradient(150deg,#9AA7C9,#6B7BA6)'}[meal] || 'linear-gradient(150deg,#B96B4E,#8A4028)';
   if(meal === '加餐'){
     target = document.getElementById('diet-snack');
-    if(!target){
-      target = document.createElement('div');
-      target.className = 'card meal-card';
-      target.id = 'diet-snack';
-      target.style.marginTop = '12px';
-      target.setAttribute('data-recorded','1');
-      // 插到晚餐卡之后、统计卡之前
-      var dinner = document.getElementById('diet-dinner');
-      var statCard = null;
-      // 找统计卡：晚餐卡后面的下一个 card 兄弟
-      if(dinner && dinner.nextElementSibling && dinner.nextElementSibling.classList && dinner.nextElementSibling.classList.contains('card')){
-        statCard = dinner.nextElementSibling;
-      }
-      if(statCard && statCard.parentNode){
-        statCard.parentNode.insertBefore(target, statCard);
-      }else if(dinner && dinner.parentNode){
-        dinner.parentNode.appendChild(target);
-      }
-    }
+    if(!target) target = createDietSnack();
   }else{
     var map = {'早餐':'diet-breakfast','午餐':'diet-lunch','晚餐':'diet-dinner'};
     target = document.getElementById(map[meal] || 'diet-dinner');
   }
   if(target){
+    var modeClass = currentUserMode === 'new' ? 'new-meal-content' : 'demo-meal-content';
     target.style.opacity = '1';
+    target.style.display = 'flex';
     target.setAttribute('data-recorded','1');
-    target.innerHTML =
-      '<div class="meal-photo" style="background:'+photoBg+'"><span>'+meal+'</span></div>'+
-      '<div class="meal-info">'+
-        '<div class="m-head"><span class="m-name">红烧肉饭</span><span class="m-time num">'+nowTime()+'</span></div>'+
-        '<div class="m-note">'+note+'</div>'+
-        '<div class="m-tags">'+tagsHtml+'</div>'+
-      '</div>';
+    target.setAttribute('data-'+currentUserMode+'-recorded','1');
+    var photo = target.querySelector('.meal-photo.'+modeClass);
+    var info = target.querySelector('.meal-info.'+modeClass);
+    if(photo){
+      photo.classList.remove('empty');
+      photo.style.background = photoBg;
+      photo.innerHTML = '<span>'+meal+'</span>';
+    }
+    if(info){
+      info.innerHTML = '<div class="m-head"><span class="m-name">红烧肉饭</span><span class="m-time num">'+nowTime()+'</span></div>'+
+        '<div class="m-note">'+note+'</div><div class="m-tags">'+tagsHtml+'</div>';
+    }
   }
-  // 动态更新已记录餐数（基于 data-recorded，不依赖 opacity）
-  var recorded = 0;
-  document.querySelectorAll('#screen-diet .meal-card[data-recorded="1"]').forEach(function(){ recorded++; });
-  document.querySelector('#screen-diet .sub').textContent = '8 月 24 日 · 已记录 ' + recorded + ' 餐';
+  // 动态更新当前用户的已记录餐数
+  updateDietSummary();
   toast('已记录'+meal+' · 红烧肉饭');
   var myToken = dietToken;
   setTimeout(function(){
@@ -2483,6 +2576,7 @@ var obGenderVal = '男';
 var obConds = ['高血压','糖尿病'];
 var obToken = 0;
 var DATA_PAGES = ['home','archive','report','summary','compare','family','meds','metric','diet'];
+var EMPTY_DATA_PAGES = ['archive','report','summary','compare','family','meds','metric','insight','reportdetail','devices'];
 function setDemoBanner(show){
   DATA_PAGES.forEach(function(k){
     var page = document.querySelector('#screen-'+k+' .page');
@@ -2491,13 +2585,30 @@ function setDemoBanner(show){
     if(show && !old){
       var b = document.createElement('div');
       b.className = 'demo-banner';
-      b.textContent = '以下为演示数据，仅用于体验界面，不是您的真实档案';
+      b.textContent = '当前为新档案，暂无数据的区域已显示空态';
       // 首页插在顶栏之后，其余页面插在顶部
       var ref = (k==='home') ? page.querySelector('.topbar') : null;
       if(ref && ref.nextSibling) page.insertBefore(b, ref.nextSibling);
       else page.insertBefore(b, page.firstChild);
     }else if(!show && old){
       old.remove();
+    }
+  });
+}
+function setDataPageMode(isNew){
+  document.body.classList.toggle('new-user-mode', isNew);
+  EMPTY_DATA_PAGES.forEach(function(k){
+    var page = document.getElementById('page-'+k);
+    if(!page) return;
+    page.classList.add('data-page');
+    if(!page.querySelector('.new-user-empty')){
+      var empty = document.createElement('div');
+      empty.className = 'new-user-empty';
+      empty.setAttribute('role','status');
+      empty.innerHTML = '<div class="empty-value">--<span>暂无数据</span></div><p>完成第一次记录后，这里将显示你的个人数据。</p>';
+      var topbar = page.querySelector('.topbar');
+      if(topbar) topbar.insertAdjacentElement('afterend', empty);
+      else page.insertBefore(empty, page.firstChild);
     }
   });
 }
@@ -2582,6 +2693,7 @@ function enterDemo(){
 }
 function applyUserMode(user){
   var isNew = user.mode === 'new';
+  currentUserMode = isNew ? 'new' : 'demo';
   // 顶部用户名
   var hm = document.getElementById('home-member-name');
   if(hm) hm.textContent = isNew ? user.name : '张卫东';
@@ -2603,6 +2715,8 @@ function applyUserMode(user){
   }
   // 数据页演示标注：非演示模式明确提示当前为演示数据，避免与本人档案错配
   setDemoBanner(isNew);
+  setDataPageMode(isNew);
+  applyDietMode(isNew);
   // 首页指标与横幅
   if(isNew){
     var vals = document.querySelectorAll('#page-home .m-value');
