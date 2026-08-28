@@ -2760,6 +2760,8 @@ function applyUserMode(user){
   var hm = document.getElementById('home-member-name');
   if(hm) hm.textContent = isNew ? user.name : '张卫东';
   // 我的页档案
+  var pn = document.getElementById('mine-profile-name');
+  if(pn) pn.textContent = isNew ? user.name : '张卫东';
   var av = document.querySelector('#page-mine .avatar');
   if(av) av.textContent = isNew ? user.name.charAt(0) : '张';
   var meta = document.getElementById('mine-profile-meta');
