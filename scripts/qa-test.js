@@ -114,6 +114,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   });
   assert('相册选图入口存在', !!albumButton);
   var scanFile = doc.getElementById('scan-file');
+  assert('相册文件输入支持多选', !!scanFile && scanFile.hasAttribute('multiple'));
   if(scanFile){
     Object.defineProperty(scanFile, 'files', {
       value: [new win.File(['x'], 'report.jpg', {type:'image/jpeg'})],
@@ -121,13 +122,63 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     });
     scanFile.dispatchEvent(new win.Event('change', {bubbles:true}));
   }
-  assert('相册选图后 OCR 状态可见', !!scanFile && doc.getElementById('ocr-state').classList.contains('on'));
+  assert('单张相册选图后 OCR 状态与标题不变', !!scanFile && doc.getElementById('ocr-state').classList.contains('on') && doc.querySelector('#ocr-state .o-t').textContent === '正在识别报告内容');
   await sleep(2400);
   assert('相册选图后显示指标确认页', !!scanFile && doc.querySelector('#scan-step2').style.display !== 'none');
   var scanFileStatus = doc.getElementById('scan-file-status');
   assert('已选提示包含文件名', !!scanFileStatus && scanFileStatus.textContent.indexOf('report.jpg') >= 0);
   win.eval('resetScan()');
   assert('重新拍后清除已选提示', !!scanFileStatus && scanFileStatus.style.display === 'none' && scanFileStatus.textContent === '');
+
+  console.log('=== 5.2. 化验单相册多选逐张归档 ===');
+  if(scanFile){
+    Object.defineProperty(scanFile, 'files', {
+      value: [
+        new win.File(['x'], 'report-1.jpg', {type:'image/jpeg'}),
+        new win.File(['y'], 'report-2.jpg', {type:'image/jpeg'})
+      ],
+      configurable: true
+    });
+    scanFile.dispatchEvent(new win.Event('change', {bubbles:true}));
+  }
+  assert('多选提示显示已选择 2 张图片', !!scanFileStatus && scanFileStatus.textContent === '已选择 2 张图片');
+  assert('第一张显示 OCR 进度', doc.getElementById('ocr-state').classList.contains('on') && doc.querySelector('#ocr-state .o-t').textContent.indexOf('第 1/2 张') >= 0);
+  await sleep(2400);
+  assert('第一张 OCR 后进入确认页', doc.querySelector('#scan-step2').style.display !== 'none');
+  doc.querySelector('#scan-step2 .btn-primary').click();
+  assert('第一张归档后自动识别第二张', doc.getElementById('ocr-state').classList.contains('on') && doc.querySelector('#ocr-state .o-t').textContent.indexOf('第 2/2 张') >= 0 && doc.getElementById('toast').textContent.indexOf('第 1 张已归档，继续第 2 张') >= 0);
+  await sleep(2400);
+  assert('第二张 OCR 后进入确认页', doc.querySelector('#scan-step2').style.display !== 'none');
+  doc.querySelector('#scan-step2 .btn-primary').click();
+  assert('全部完成提示已归档 2 张报告', doc.getElementById('toast').textContent.indexOf('已归档 2 张报告') >= 0);
+  await sleep(1000);
+  assert('多张报告归档后回首页', visible('screen-home'));
+
+  win.eval('startScan()');
+  if(scanFile){
+    Object.defineProperty(scanFile, 'files', {
+      value: [
+        new win.File(['x'], 'reset-1.jpg', {type:'image/jpeg'}),
+        new win.File(['y'], 'reset-2.jpg', {type:'image/jpeg'})
+      ],
+      configurable: true
+    });
+    scanFile.dispatchEvent(new win.Event('change', {bubbles:true}));
+  }
+  win.eval('resetScan()');
+  assert('resetScan 清空多选队列', win.eval('scanFiles.length === 0 && scanIdx === 0') && scanFileStatus.style.display === 'none');
+  if(scanFile){
+    Object.defineProperty(scanFile, 'files', {
+      value: [
+        new win.File(['x'], 'cancel-1.jpg', {type:'image/jpeg'}),
+        new win.File(['y'], 'cancel-2.jpg', {type:'image/jpeg'})
+      ],
+      configurable: true
+    });
+    scanFile.dispatchEvent(new win.Event('change', {bubbles:true}));
+  }
+  doc.querySelector('#page-scan .btn-back').click();
+  assert('取消扫描清空多选队列', win.eval('scanFiles.length === 0 && scanIdx === 0'));
 
   console.log('=== 6. 饮食记录流程 ===');
   doc.querySelector('.tabbar .tab[data-tab="home"]').click();
