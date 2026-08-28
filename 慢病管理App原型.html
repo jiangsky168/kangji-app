@@ -92,7 +92,7 @@ body{
 .card{background:var(--surface);border-radius:var(--r-card);border:1px solid var(--line);box-shadow:var(--shadow);padding:16px}
 .card + .card{margin-top:12px}
 .card-title{font-size:15px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
-.card-title .more{font-size:13px;color:var(--teal-700);font-weight:600;background:none;border:none;cursor:pointer;padding:2px}
+.card-title .more{font-size:13px;color:var(--teal-700);font-weight:600;background:none;border:none;cursor:pointer;padding:2px 8px;min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center;font-family:var(--font);margin:-10px -8px -10px 0}
 
 /* 主按钮 */
 .btn-primary{
@@ -148,9 +148,11 @@ body{
 .todo .t-title{font-size:15px;font-weight:600}
 .todo .t-sub{font-size:12px;color:var(--ink-3);margin-top:1px}
 .todo .t-action{flex:none}
-.check{width:28px;height:28px;border-radius:50%;border:2px solid var(--line);background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:transparent;transition:all .15s;flex:none}
-.check.done{background:var(--teal-600);border-color:var(--teal-600);color:#fff}
-.check svg{width:14px;height:14px}
+.check{width:44px;height:44px;border:none;border-radius:50%;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:transparent;transition:all .15s;flex:none;position:relative}
+.check::before{content:"";position:absolute;width:28px;height:28px;border-radius:50%;border:2px solid var(--line);background:transparent;transition:all .15s}
+.check.done{color:#fff}
+.check.done::before{background:var(--teal-600);border-color:var(--teal-600)}
+.check svg{width:14px;height:14px;position:relative;z-index:1}
 
 /* 快捷入口 */
 .quick-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
@@ -186,7 +188,7 @@ body{
 .pill{
   flex:none;padding:8px 16px;border-radius:999px;border:1px solid var(--line);
   background:var(--surface);font-size:13.5px;font-weight:600;color:var(--ink-2);
-  cursor:pointer;font-family:var(--font);white-space:nowrap;
+  cursor:pointer;font-family:var(--font);white-space:nowrap;min-height:44px;
 }
 .pill.on{background:var(--teal-700);border-color:var(--teal-700);color:#fff}
 .pill:active{transform:scale(.96)}
@@ -318,7 +320,7 @@ body{
 .compare-entry .ce-sub{font-size:12.5px;color:var(--ink-2);margin-top:2px;line-height:1.5}
 .ce-btn{
   flex:none;background:var(--teal-700);color:#fff;border:none;border-radius:999px;
-  padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);
+  padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);min-width:60px;min-height:44px;
 }
 .ce-btn:active{transform:scale(.96)}
 .cmp-sum{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
@@ -369,7 +371,7 @@ body{
 .diet-chip{
   border:1.5px solid var(--line);border-radius:999px;padding:8px 15px;
   background:var(--surface);font-size:13.5px;font-weight:600;color:var(--ink-2);
-  cursor:pointer;font-family:var(--font);
+  cursor:pointer;font-family:var(--font);min-height:44px;
 }
 .diet-chip:active{transform:scale(.96)}
 .diet-chip.on{border-color:var(--teal-600);background:var(--teal-50);color:var(--teal-700)}
@@ -402,7 +404,7 @@ body{
 .switch-mini{
   border:1px solid var(--teal-600);background:var(--teal-50);color:var(--teal-700);
   border-radius:999px;padding:5px 13px;font-size:12.5px;font-weight:700;
-  cursor:pointer;font-family:var(--font);flex:none;
+  cursor:pointer;font-family:var(--font);flex:none;min-height:44px;
 }
 .switch-mini:active{transform:scale(.95)}
 
@@ -477,7 +479,7 @@ body.new-user-mode .new-diet-stat.stat-grid{display:grid!important}
 .confirm-table input{
   flex:1 1 140px;min-width:100px;border:1px solid var(--line);border-radius:8px;padding:7px 10px;
   font-size:15px;font-weight:700;text-align:right;color:var(--ink);
-  background:#FAFCFB;font-family:var(--font);font-variant-numeric:tabular-nums;
+  background:#FAFCFB;font-family:var(--font);font-variant-numeric:tabular-nums;min-height:44px;
 }
 .confirm-table input:focus{outline:2px solid var(--teal-600);outline-offset:0;border-color:var(--teal-600);background:#fff}
 input::placeholder{color:#5F746F;opacity:1}
@@ -525,7 +527,7 @@ input::placeholder{color:#5F746F;opacity:1}
 
 /* 标签页控件 */
 .seg{display:flex;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:3px;gap:2px}
-.seg button{flex:1;border:none;background:none;padding:7px 0;border-radius:999px;font-size:13px;font-weight:600;color:var(--ink-2);cursor:pointer;font-family:var(--font)}
+.seg button{flex:1;border:none;background:none;padding:7px 0;border-radius:999px;font-size:13px;font-weight:600;color:var(--ink-2);cursor:pointer;font-family:var(--font);min-height:44px}
 .seg button.on{background:var(--surface);color:var(--teal-700);box-shadow:var(--shadow)}
 
 /* 下拉说明 */
@@ -556,7 +558,7 @@ input::placeholder{color:#5F746F;opacity:1}
 .ai-result + .ai-result{border-top:1px solid rgba(255,255,255,.2)}
 .ai-result strong{display:block;font-size:14px;margin-bottom:4px}
 .ai-result p{font-size:13px;line-height:1.7;color:rgba(255,255,255,.92)}
-.ai-result .ai-note{font-size:12px;color:rgba(255,255,255,.72);margin-top:5px}
+.ai-result .ai-note{font-size:12px;color:rgba(255,255,255,.88);margin-top:5px}
 
 /* V2 共病关联分析 */
 .insight-entry .ce-icon{background:var(--teal-900)}
@@ -595,7 +597,7 @@ input::placeholder{color:#5F746F;opacity:1}
 .previsit-number span{font-size:14px;color:var(--ink-2)}
 .checklist-row{display:flex;align-items:flex-start;gap:10px;padding:11px 0;font-size:13.5px;line-height:1.55}
 .checklist-row + .checklist-row{border-top:1px solid var(--line)}
-.checklist-row .check{width:28px;height:28px;min-width:28px}
+.checklist-row .check{width:44px;height:44px;min-width:44px}
 .previsit-list{padding-left:20px;color:var(--ink-2);font-size:13px;line-height:1.8}
 
 /* V2 就诊摘要 */
@@ -652,7 +654,7 @@ input::placeholder{color:#5F746F;opacity:1}
 /* V2 付费订阅 */
 .member-hero{background:linear-gradient(155deg,var(--teal-700),var(--teal-900));color:#fff;border-radius:var(--r-card);padding:18px;margin-bottom:12px}
 .member-hero h2{font-size:22px}
-.member-hero p{font-size:13px;line-height:1.65;color:rgba(255,255,255,.82);margin-top:6px}
+.member-hero p{font-size:13px;line-height:1.65;color:rgba(255,255,255,.88);margin-top:6px}
 .benefit-table{display:grid;grid-template-columns:minmax(0,1.4fr) 1fr 1fr;font-size:12px;border:1px solid var(--line);border-radius:var(--r-ctl);overflow:hidden}
 .benefit-table > div{padding:11px 8px;border-bottom:1px solid var(--line);line-height:1.45;background:var(--surface)}
 .benefit-table > div:nth-child(3n+2),.benefit-table > div:nth-child(3n+3){text-align:center}
@@ -678,6 +680,10 @@ input::placeholder{color:#5F746F;opacity:1}
 .device-title{display:flex;align-items:center;gap:7px;flex-wrap:wrap;font-size:14px;font-weight:700}
 .device-sub{font-size:12px;color:var(--ink-3);line-height:1.5;margin-top:3px}
 .insight-entry .ce-btn{min-width:60px;min-height:44px}
+
+@media (max-width:360px){
+  .metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
 #page-insight .footnote,#page-previsit .footnote,#page-summary .footnote,#page-reminder .footnote,#page-family .footnote,#page-devices .footnote{font-size:12px}
 </style>
 </head>
@@ -752,7 +758,7 @@ input::placeholder{color:#5F746F;opacity:1}
 
       <!-- 今日待办 -->
       <div class="card" style="margin-top:14px">
-        <div class="card-title">今日待办 <span class="more" onclick="go('page-meds')">管理</span></div>
+        <div class="card-title">今日待办 <button class="more" onclick="go('page-meds')">管理</button></div>
         <div class="todo">
           <span class="t-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 20.5 3 13a1.5 1.5 0 0 1 0-2l1.5-1.5a1.5 1.5 0 0 1 2 0L10.5 13.5 19 5a1.5 1.5 0 0 1 2 0l0 0a1.5 1.5 0 0 1 0 2L12.5 20.5a1.5 1.5 0 0 1-2 0z"/></svg></span>
           <div class="t-main">
@@ -786,7 +792,7 @@ input::placeholder{color:#5F746F;opacity:1}
 
       <!-- 本周血糖趋势 -->
       <div class="card">
-        <div class="card-title">近 7 天空腹血糖 <span class="more" onclick="go('page-metric')">详情</span></div>
+        <div class="card-title">近 7 天空腹血糖 <button class="more" onclick="go('page-metric')">详情</button></div>
         <div class="chart">
           <svg viewBox="0 0 320 108" preserveAspectRatio="none">
             <line class="gridline" x1="0" y1="24" x2="320" y2="24"/>
@@ -1955,8 +1961,8 @@ input::placeholder{color:#5F746F;opacity:1}
           <div class="card-title">报告信息</div>
           <div style="display:flex;flex-direction:column;gap:10px">
             <div style="display:flex;gap:10px">
-              <input placeholder="医院名称" value="市第一人民医院" style="flex:1;border:1px solid var(--line);border-radius:10px;padding:11px 12px;font-size:14px;font-family:var(--font);background:#FAFCFB">
-              <input placeholder="检查日期" value="2026-08-24" class="num" style="flex:1;border:1px solid var(--line);border-radius:10px;padding:11px 12px;font-size:14px;font-family:var(--font);background:#FAFCFB">
+              <input aria-label="医院" placeholder="医院名称" value="市第一人民医院" style="flex:1;min-height:44px;border:1px solid var(--line);border-radius:10px;padding:11px 12px;font-size:14px;font-family:var(--font);background:#FAFCFB">
+              <input aria-label="检查日期" placeholder="检查日期" value="2026-08-24" class="num" style="flex:1;min-height:44px;border:1px solid var(--line);border-radius:10px;padding:11px 12px;font-size:14px;font-family:var(--font);background:#FAFCFB">
             </div>
             <div style="font-size:12px;color:var(--ink-3)">识别为：生化全套 · 自动归类到 血糖 / 血脂 / 尿酸 / 肝功</div>
           </div>
@@ -1996,7 +2002,7 @@ input::placeholder{color:#5F746F;opacity:1}
           <div style="font-size:13.5px;color:var(--ink-2);margin-top:6px">手机号登录，方便家人共享档案</div>
           <div style="margin-top:28px">
             <div style="font-size:13px;font-weight:700;color:var(--ink-2);margin-bottom:8px">手机号</div>
-            <input id="ob-phone" type="tel" inputmode="numeric" maxlength="11" placeholder="请输入 11 位手机号" style="width:100%;border:1.5px solid var(--line);border-radius:12px;padding:14px;font-size:17px;font-family:var(--font);background:var(--surface);color:var(--ink);letter-spacing:.03em">
+            <input id="ob-phone" aria-label="手机号" type="tel" inputmode="numeric" maxlength="11" placeholder="请输入 11 位手机号" style="width:100%;border:1.5px solid var(--line);border-radius:12px;padding:14px;font-size:17px;font-family:var(--font);background:var(--surface);color:var(--ink);letter-spacing:.03em">
             <button class="btn-primary" style="margin-top:16px" onclick="obPhoneNext()">获取验证码</button>
           </div>
           <div style="display:flex;gap:10px;margin-top:20px;align-items:center">
@@ -2019,16 +2025,16 @@ input::placeholder{color:#5F746F;opacity:1}
           <div style="font-size:13.5px;color:var(--ink-2);margin-top:6px">用于指标参考范围的判断</div>
           <div style="margin-top:24px">
             <div style="font-size:13px;font-weight:700;color:var(--ink-2);margin-bottom:8px">怎么称呼您</div>
-            <input id="ob-name" type="text" maxlength="10" placeholder="例如：王阿姨" style="width:100%;border:1.5px solid var(--line);border-radius:12px;padding:14px;font-size:17px;font-family:var(--font);background:var(--surface);color:var(--ink)">
+            <input id="ob-name" aria-label="姓名" type="text" maxlength="10" placeholder="例如：王阿姨" style="width:100%;border:1.5px solid var(--line);border-radius:12px;padding:14px;font-size:17px;font-family:var(--font);background:var(--surface);color:var(--ink)">
             <div style="font-size:13px;font-weight:700;color:var(--ink-2);margin:20px 0 8px">性别</div>
             <div style="display:flex;gap:10px">
               <button class="ob-gender on" onclick="obGender(this,'男')">男</button>
               <button class="ob-gender" onclick="obGender(this,'女')">女</button>
             </div>
             <div style="font-size:13px;font-weight:700;color:var(--ink-2);margin:20px 0 8px">出生年份</div>
-            <input id="ob-year" type="number" inputmode="numeric" maxlength="4" placeholder="例如：1965" style="width:100%;border:1.5px solid var(--line);border-radius:12px;padding:14px;font-size:17px;font-family:var(--font);background:var(--surface);color:var(--ink);font-variant-numeric:tabular-nums">
+            <input id="ob-year" aria-label="出生年份" type="number" inputmode="numeric" maxlength="4" placeholder="例如：1965" style="width:100%;border:1.5px solid var(--line);border-radius:12px;padding:14px;font-size:17px;font-family:var(--font);background:var(--surface);color:var(--ink);font-variant-numeric:tabular-nums">
             <div style="font-size:13px;font-weight:700;color:var(--ink-2);margin:20px 0 8px">身高（厘米）</div>
-            <input id="ob-height" type="number" inputmode="numeric" maxlength="3" placeholder="例如：165" style="width:100%;border:1.5px solid var(--line);border-radius:12px;padding:14px;font-size:17px;font-family:var(--font);background:var(--surface);color:var(--ink);font-variant-numeric:tabular-nums">
+            <input id="ob-height" aria-label="身高" type="number" inputmode="numeric" maxlength="3" placeholder="例如：165" style="width:100%;border:1.5px solid var(--line);border-radius:12px;padding:14px;font-size:17px;font-family:var(--font);background:var(--surface);color:var(--ink);font-variant-numeric:tabular-nums">
             <button class="btn-primary" style="margin-top:26px" onclick="obInfoNext()">下一步</button>
           </div>
         </div>
@@ -2733,7 +2739,7 @@ function applyUserMode(user){
     }
     // 待办卡标题
     var todoTitle = document.querySelector('#page-home .card .card-title');
-    if(todoTitle) todoTitle.innerHTML = '开始建档 <span class="more" onclick="go(\'page-mine\')">管理</span>';
+    if(todoTitle) todoTitle.innerHTML = '开始建档 <button class="more" onclick="go(\'page-mine\')">管理</button>';
     var switchRow = document.getElementById('switch-user-row');
     if(switchRow) switchRow.querySelector('.s-main').innerHTML = '切换用户<div class="s-sub">退出当前档案，重新体验注册流程</div>';
   }else{
@@ -2755,7 +2761,7 @@ function applyUserMode(user){
         '<div class="a-sub">低密度脂蛋白 3.7↑ ｜ 尿酸 445↑ ｜ 谷丙转氨酶 52↑，点击查看详情</div></div>';
     }
     var todoTitle2 = document.querySelector('#page-home .card .card-title');
-    if(todoTitle2) todoTitle2.innerHTML = '今日待办 <span class="more" onclick="go(\'page-meds\')">管理</span>';
+    if(todoTitle2) todoTitle2.innerHTML = '今日待办 <button class="more" onclick="go(\'page-meds\')">管理</button>';
     var switchRow2 = document.getElementById('switch-user-row');
     if(switchRow2) switchRow2.querySelector('.s-main').innerHTML = '切换用户<div class="s-sub">退出当前档案，重新体验注册流程</div>';
   }
