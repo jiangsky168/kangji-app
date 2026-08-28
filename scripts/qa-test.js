@@ -116,20 +116,39 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   var scanFile = doc.getElementById('scan-file');
   assert('相册文件输入支持多选', !!scanFile && scanFile.hasAttribute('multiple'));
   assert('OCR API 使用本机服务默认地址', win.eval('OCR_API') === 'http://192.168.1.211:8001/ocr');
-  var parsed = win.parseOcrLines([
-    '市第一人民医院', '检验报告单',
-    '葡萄糖 GLU', '6.8', '3.9-6.1 mmol/L', 'H',
-    '总胆固醇 TC', '5.6', '<5.2 mmol/L',
-    '尿酸 UA', '445', '208-428 umol/L'
-  ]);
+  function fullOcrLines(glucose, totalCholesterol, hospital, reportDate){
+    return [
+      hospital, '检验报告单', '报告时间：' + reportDate,
+      '葡萄糖 GLU', glucose, '3.9-6.1 mmol/L', 'H',
+      '总胆固醇 TC', totalCholesterol, '<5.2 mmol/L',
+      '甘油三酯 TG', '2.0', '<1.7 mmol/L',
+      '低密度脂蛋白 LDL', '3.3', '<3.4 mmol/L',
+      '高密度脂蛋白 HDL', '1.2', '≥1.0 mmol/L',
+      '尿酸 UA', '445', '208-428 umol/L',
+      '谷丙转氨酶 ALT', '31', '<40 U/L',
+      '谷草转氨酶 AST', '29', '<40 U/L',
+      'γ-谷氨酰转肽酶 GGT', '37', '<50 U/L',
+      '糖化血红蛋白 HbA1c', '6.5', '<7 %',
+      '肌酐 CREA', '89', '57-111 umol/L',
+      '尿素氮 BUN', '5.2', '3.1-8.0 mmol/L',
+      '白蛋白 ALB', '42', '40-55 g/L',
+      '总胆红素 TBIL', '12.3', '5-21 umol/L',
+      '钾 K', '3.9', '3.5-5.3 mmol/L'
+    ];
+  }
+  var parsedLines = fullOcrLines('6.8', '5.6', '芜湖市第二人民医院', '2026-07-23');
+  var parsed = win.parseOcrLines(parsedLines);
   var parsedByName = {};
   parsed.forEach(function(item){ parsedByName[item.name] = item; });
-  assert('parseOcrLines 固定输出 10 项', parsed.length === 10);
+  assert('parseOcrLines 输出全部 15 项', parsed.length === 15);
   assert('parseOcrLines 识别葡萄糖真实值', parsedByName['空腹血糖'].value === '6.8');
   assert('parseOcrLines 识别总胆固醇真实值', parsedByName['总胆固醇'].value === '5.6');
   assert('parseOcrLines 识别尿酸并规范单位', parsedByName['血尿酸'].value === '445' && parsedByName['血尿酸'].unit === 'μmol/L');
   assert('parseOcrLines 捕捉参考范围', parsedByName['空腹血糖'].ref === '3.9-6.1');
-  assert('parseOcrLines 缺项为 --', parsedByName['甘油三酯'].value === '--' && parsedByName['糖化血红蛋白'].value === '--');
+  assert('parseOcrLines 识别未知指标', !!parsedByName['肌酐'] && parsedByName['肌酐'].value === '89' && !!parsedByName['钾'] && parsedByName['钾'].value === '3.9');
+  assert('extractReportMeta 可用', typeof win.extractReportMeta === 'function');
+  var parsedMeta = typeof win.extractReportMeta === 'function' ? win.extractReportMeta(parsedLines) : {};
+  assert('extractReportMeta 识别医院与日期', parsedMeta.hospital === '芜湖市第二人民医院' && parsedMeta.reportDate === '2026-07-23');
 
   var ocrFetchCalls = [];
   win.fetch = function(url, options){
@@ -138,20 +157,17 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     if(file && file.name === 'offline.jpg') return Promise.reject(new Error('offline'));
     var values = file && file.name === 'report-1.jpg' ? ['6.1','5.1'] :
       file && file.name === 'report-2.jpg' ? ['7.2','6.0'] : ['7.1','5.2'];
-    var extraLines = file && file.name === 'report.jpg' ? [
-      '尿酸 UA', '401', '208-428 umol/L',
-      '谷丙转氨酶 ALT', '31', '<40 U/L',
-      '谷草转氨酶 AST', '29', '<40 U/L',
-      'γ-谷氨酰转肽酶 GGT', '37', '<50 U/L'
-    ] : [];
+    var lines = file && file.name === 'report.jpg' ? fullOcrLines(values[0], values[1], '芜湖市第二人民医院', '2026-07-23') : [
+      file && file.name === 'report-2.jpg' ? '合肥市第二人民医院' : '合肥市第一人民医院',
+      '报告时间：' + (file && file.name === 'report-2.jpg' ? '2026-07-25' : '2026-07-24'),
+      '葡萄糖 GLU', values[0], '3.9-6.1 mmol/L', 'H',
+      '总胆固醇 TC', values[1], '<5.2 mmol/L'
+    ];
     return Promise.resolve({
       ok: true,
       status: 200,
       json: function(){
-        return Promise.resolve({ok:true, lines:[
-          '葡萄糖 GLU', values[0], '3.9-6.1 mmol/L', 'H',
-          '总胆固醇 TC', values[1], '<5.2 mmol/L'
-        ].concat(extraLines), time_ms:123});
+        return Promise.resolve({ok:true, lines:lines, time_ms:123});
       }
     });
   };
@@ -170,28 +186,41 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   assert('相册选图后显示指标确认页', !!scanFile && doc.querySelector('#scan-step2').style.display !== 'none');
   assert('相册 OCR 通过 multipart file 请求本机接口', ocrFetchCalls[0].url === win.eval('OCR_API') && ocrFetchCalls[0].method === 'POST' && ocrFetchCalls[0].file === 'report.jpg');
   assert('真实 OCR 数值填入确认页', doc.querySelectorAll('#scan-step2 .ct-row input')[0].value === '7.1' && doc.querySelectorAll('#scan-step2 .ct-row input')[1].value === '5.2');
-  assert('OCR 缺项显示待补充且不保留演示值', doc.querySelectorAll('#scan-step2 .ct-row input')[2].value === '' && doc.querySelectorAll('#scan-step2 .ct-row input')[2].placeholder === '待补充');
-  assert('真实 OCR 成功提示包含识别项数', doc.getElementById('toast').textContent.indexOf('识别完成（本地OCR · 6 项）') >= 0);
+  assert('OCR 确认页动态显示全部 15 项', doc.querySelectorAll('#scan-step2 .confirm-table .ct-row').length === 15);
+  var creatinineRow = Array.from(doc.querySelectorAll('#scan-step2 .confirm-table .ct-row')).find(function(row){ return row.querySelector('.ct-name').textContent === '肌酐'; });
+  assert('未知指标动态行值正确且可编辑', !!creatinineRow && creatinineRow.querySelector('input').value === '89' && !creatinineRow.querySelector('input').readOnly && !creatinineRow.querySelector('input').disabled);
+  assert('OCR 自动填充医院与检查日期', doc.getElementById('scan-hospital').value === '芜湖市第二人民医院' && doc.querySelector('#scan-step2 input[aria-label="检查日期"]').value === '2026-07-23');
+  assert('真实 OCR 成功提示包含识别项数', doc.getElementById('toast').textContent.indexOf('识别完成（本地OCR · 15 项）') >= 0);
   var scanFileStatus = doc.getElementById('scan-file-status');
   assert('已选提示包含文件名', !!scanFileStatus && scanFileStatus.textContent.indexOf('report.jpg') >= 0);
   doc.querySelector('#scan-step2 input[aria-label="医院"]').value = '测试医院';
   doc.querySelector('#scan-step2 .btn-primary').click();
   var storedMetrics = JSON.parse(win.localStorage.getItem('kangfu_metrics') || '{}');
   assert('OCR 归档写入空腹血糖', storedMetrics['空腹血糖'] === '7.1');
-  assert('OCR 归档写入报告日期与医院', /^\d{4}-\d{2}-\d{2}$/.test(win.localStorage.getItem('kangfu_metrics_date') || '') && win.localStorage.getItem('kangfu_metrics_hospital') === '测试医院');
-  assert('OCR 归档提示包含指标数', doc.getElementById('toast').textContent.indexOf('已归档 6 项指标') >= 0);
+  assert('OCR 归档写入动态未知指标', storedMetrics['肌酐'] === '89' && storedMetrics['钾'] === '3.9');
+  assert('OCR 归档使用检查日期与用户修改医院', win.localStorage.getItem('kangfu_metrics_date') === '2026-07-23' && win.localStorage.getItem('kangfu_metrics_hospital') === '测试医院');
+  assert('OCR 归档提示包含指标数', doc.getElementById('toast').textContent.indexOf('已归档 15 项指标') >= 0);
+  creatinineRow.querySelector('input').value = '90';
+  doc.querySelector('#scan-step2 input[aria-label="检查日期"]').value = '2026-07-22';
+  win.saveScan();
+  var manuallyStoredMetrics = JSON.parse(win.localStorage.getItem('kangfu_metrics') || '{}');
+  assert('用户修改的指标与日期优先归档', manuallyStoredMetrics['肌酐'] === '90' && win.localStorage.getItem('kangfu_metrics_date') === '2026-07-22');
+  creatinineRow.querySelector('input').value = '89';
+  doc.querySelector('#scan-step2 input[aria-label="检查日期"]').value = '2026-07-23';
+  win.saveScan();
   await sleep(1000);
   assert('OCR 归档后首页显示识别血糖', visible('screen-home') && !!doc.getElementById('home-glucose-value') && doc.getElementById('home-glucose-value').textContent.indexOf('7.1') >= 0);
-  assert('OCR 归档后首页标注识别日期', !!doc.getElementById('home-glucose-trend') && doc.getElementById('home-glucose-trend').textContent.indexOf('化验单识别') >= 0);
+  assert('OCR 归档后首页标注检查日期', !!doc.getElementById('home-glucose-trend') && doc.getElementById('home-glucose-trend').textContent.indexOf('07-23') >= 0);
   doc.querySelector('.tabbar .tab[data-tab="archive"]').click();
   assert('OCR 归档后档案血脂显示识别值', !!doc.getElementById('archive-lipid-total') && doc.getElementById('archive-lipid-total').textContent === '5.2');
-  assert('OCR 归档后档案尿酸显示识别值', !!doc.getElementById('archive-uric-value') && doc.getElementById('archive-uric-value').textContent.indexOf('401') >= 0);
+  assert('OCR 归档后档案尿酸显示识别值', !!doc.getElementById('archive-uric-value') && doc.getElementById('archive-uric-value').textContent.indexOf('445') >= 0);
   assert('OCR 归档后档案肝功显示识别值', !!doc.getElementById('archive-liver-alt') && doc.getElementById('archive-liver-alt').textContent === '31' && !!doc.getElementById('archive-liver-ggt') && doc.getElementById('archive-liver-ggt').textContent === '37');
   doc.querySelector('.tabbar .tab[data-tab="home"]').click();
   win.localStorage.removeItem('kangfu_metrics');
   win.localStorage.removeItem('kangfu_metrics_date');
   win.localStorage.removeItem('kangfu_metrics_hospital');
   win.eval('startScan(); applyOcrResults(parseOcrLines([]));');
+  assert('重新识别清除旧动态行并显示 0 项', doc.querySelectorAll('#scan-step2 .confirm-table .ct-row').length === 10 && doc.querySelector('#scan-step2 .badge').textContent === '0 项已识别');
   doc.querySelector('#scan-step2 .btn-primary').click();
   assert('全空归档提示未识别到指标', doc.getElementById('toast').textContent.indexOf('未识别到可归档的指标') >= 0);
   assert('全空归档不写指标存储', win.localStorage.getItem('kangfu_metrics') === null);
@@ -199,6 +228,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   win.eval('startScan()');
   win.eval('resetScan()');
   assert('重新拍后清除已选提示', !!scanFileStatus && scanFileStatus.style.display === 'none' && scanFileStatus.textContent === '');
+  assert('resetScan 清除动态行并恢复固定 10 行', doc.querySelectorAll('#scan-step2 .confirm-table .ct-row').length === 10);
 
   console.log('=== 5.2. 化验单相册多选逐张归档 ===');
   if(scanFile){
@@ -216,11 +246,13 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   await sleep(1900); // 含 compressImage 兜底等待
   assert('第一张 OCR 后进入确认页', doc.querySelector('#scan-step2').style.display !== 'none');
   assert('第一张使用自己的真实 OCR 结果', doc.querySelector('#scan-step2 .ct-row input').value === '6.1');
+  assert('第一张使用自己的医院日期', doc.getElementById('scan-hospital').value === '合肥市第一人民医院' && doc.querySelector('#scan-step2 input[aria-label="检查日期"]').value === '2026-07-24');
   doc.querySelector('#scan-step2 .btn-primary').click();
   assert('第一张归档后自动识别第二张', doc.getElementById('ocr-state').classList.contains('on') && doc.querySelector('#ocr-state .o-t').textContent.indexOf('第 2/2 张') >= 0 && doc.getElementById('toast').textContent.indexOf('第 1 张已归档，继续第 2 张') >= 0);
   await sleep(1900); // 含 compressImage 兜底等待
   assert('第二张 OCR 后进入确认页', doc.querySelector('#scan-step2').style.display !== 'none');
   assert('第二张使用不同的真实 OCR 结果', doc.querySelector('#scan-step2 .ct-row input').value === '7.2');
+  assert('第二张刷新为新报告医院日期', doc.getElementById('scan-hospital').value === '合肥市第二人民医院' && doc.querySelector('#scan-step2 input[aria-label="检查日期"]').value === '2026-07-25');
   doc.querySelector('#scan-step2 .btn-primary').click();
   assert('全部完成提示已归档 2 张报告', doc.getElementById('toast').textContent.indexOf('已归档 2 张报告') >= 0);
   await sleep(1000);
@@ -263,8 +295,9 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     });
     scanFile.dispatchEvent(new win.Event('change', {bubbles:true}));
   }
+  win.applyOcrResults(win.parseOcrLines(fullOcrLines('6.9', '5.4', '取消测试医院', '2026-07-26')));
   doc.querySelector('#page-scan .btn-back').click();
-  assert('取消扫描清空多选队列', win.eval('scanFiles.length === 0 && scanIdx === 0'));
+  assert('取消扫描清空多选队列与动态行', win.eval('scanFiles.length === 0 && scanIdx === 0') && doc.querySelectorAll('#scan-step2 .confirm-table .ct-row').length === 10);
 
   console.log('=== 6. 饮食记录流程 ===');
   doc.querySelector('.tabbar .tab[data-tab="home"]').click();

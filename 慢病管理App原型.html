@@ -2012,7 +2012,7 @@ input::placeholder{color:#5F746F;opacity:1}
           <div style="display:flex;flex-direction:column;gap:10px">
             <div style="display:flex;gap:10px">
               <input id="scan-hospital" aria-label="医院" placeholder="医院名称" value="市第一人民医院" style="flex:1;min-height:44px;border:1px solid var(--line);border-radius:10px;padding:11px 12px;font-size:14px;font-family:var(--font);background:#FAFCFB">
-              <input aria-label="检查日期" placeholder="检查日期" value="2026-08-24" class="num" style="flex:1;min-height:44px;border:1px solid var(--line);border-radius:10px;padding:11px 12px;font-size:14px;font-family:var(--font);background:#FAFCFB">
+              <input id="scan-report-date" aria-label="检查日期" placeholder="检查日期" value="2026-08-24" class="num" style="flex:1;min-height:44px;border:1px solid var(--line);border-radius:10px;padding:11px 12px;font-size:14px;font-family:var(--font);background:#FAFCFB">
             </div>
             <div style="font-size:12px;color:var(--ink-3)">识别为：生化全套 · 自动归类到 血糖 / 血脂 / 尿酸 / 肝功</div>
           </div>
@@ -2171,7 +2171,10 @@ function go(id){
   showScreen(id);
 }
 function back(){
-  if(stack[stack.length-1] === 'scan') clearScanQueue();
+  if(stack[stack.length-1] === 'scan'){
+    restoreScanInputs();
+    clearScanQueue();
+  }
   cancelFlows();
   stack.pop();
   if(stack.length===0) stack=['home'];
@@ -2363,38 +2366,141 @@ var OCR_METRICS = [
   {name:'γ-谷氨酰转肽酶', aliases:['γ-谷氨酰转肽酶','GGT','γ-GT','谷氨酰转肽酶'], unit:'U/L', ref:'<50'},
   {name:'糖化血红蛋白', aliases:['糖化血红蛋白','HbA1c','糖化'], unit:'%', ref:'<7'}
 ];
-function parseOcrLines(lines){
-  var texts = Array.isArray(lines) ? lines.map(function(line){ return String(line).trim(); }) : [];
-  var numberPattern = /^\d+(?:\.\d+)?$/;
-  var unitPattern = /(mmol\/L|[μµu]mol\/L|U\/L|%|mg\/dL)/i;
-  var refPattern = /([<>≤≥]\s*\d+(?:\.\d+)?|\d+(?:\.\d+)?\s*[-~至]\s*\d+(?:\.\d+)?)/;
-  return OCR_METRICS.map(function(metric){
-    var matchIndex = -1;
-    for(var i=0;i<texts.length;i++){
-      var lower = texts[i].toLowerCase();
-      if(metric.aliases.some(function(alias){ return lower.indexOf(alias.toLowerCase()) >= 0; })){
-        matchIndex = i;
-        break;
-      }
-    }
-    var value = '--';
-    var unit = metric.unit;
-    var ref = metric.ref;
-    if(matchIndex >= 0){
-      var end = Math.min(texts.length - 1, matchIndex + 3);
-      for(var j=matchIndex;j<=end;j++){
-        if(value === '--' && numberPattern.test(texts[j])) value = texts[j];
-        var unitMatch = texts[j].match(unitPattern);
-        if(unitMatch) unit = unitMatch[1].replace(/^u(?=mol)/i, 'μ').replace(/^µ/, 'μ');
-        var refMatch = texts[j].match(refPattern);
-        if(refMatch) ref = refMatch[1].replace(/\s+/g, '');
-      }
-    }
-    return {name:metric.name, value:value, unit:unit, ref:ref};
-  });
+var OCR_UNIT_PATTERN = /(mmol\/L|[μµu]mol\/L|[μµu]g\/L|mg\/dL|mg\/L|g\/dL|g\/L|IU\/L|U\/L|mL\/min(?:\/1\.73m²)?|10\^?\d+\/L|fL|pg|%)/i;
+var OCR_REF_PATTERN = /([<>≤≥]\s*\d+(?:\.\d+)?|\d+(?:\.\d+)?\s*[-~至]\s*\d+(?:\.\d+)?)/;
+function ocrLineHasAlias(line, alias){
+  if(/^[A-Za-z][A-Za-z0-9-]*$/.test(alias)){
+    var escaped = alias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp('(^|[^A-Za-z0-9])' + escaped + '([^A-Za-z0-9]|$)', 'i').test(line);
+  }
+  return line.toLowerCase().indexOf(alias.toLowerCase()) >= 0;
 }
-function applyOcrResults(results){
+function findOcrMetricLine(texts, metric){
+  for(var a=0;a<metric.aliases.length;a++){
+    for(var i=0;i<texts.length;i++){
+      if(ocrLineHasAlias(texts[i], metric.aliases[a])) return i;
+    }
+  }
+  return -1;
+}
+function normalizeOcrUnit(unit){
+  return unit ? unit.replace(/^u(?=(?:mol|g))/i, 'μ').replace(/^µ/, 'μ') : '';
+}
+function parseOcrMetricAt(texts, index, defaultUnit, defaultRef){
+  var value = '--';
+  var unit = defaultUnit || '';
+  var ref = defaultRef || '--';
+  if(index < 0) return {value:value, unit:unit, ref:ref};
+  var end = Math.min(texts.length - 1, index + 3);
+  for(var j=index;j<=end;j++){
+    var line = texts[j];
+    if(value === '--'){
+      var valueMatch = j === index ? line.match(/(?:^|[\s:：])([+-]?\d+(?:\.\d+)?)(?=$|[\s*↑↓HL])/i) : line.match(/^\s*([+-]?\d+(?:\.\d+)?)\s*(?:[*↑↓HL]|[A-Za-zμµ/%^0-9.²]+(?:\/[A-Za-z0-9.^²]+)*)?\s*$/i);
+      if(valueMatch) value = valueMatch[1];
+    }
+    var unitMatch = line.match(OCR_UNIT_PATTERN);
+    if(unitMatch) unit = normalizeOcrUnit(unitMatch[1]);
+    var refMatch = line.match(OCR_REF_PATTERN);
+    if(refMatch) ref = refMatch[1].replace(/\s+/g, '');
+  }
+  return {value:value, unit:unit, ref:ref};
+}
+function unknownOcrMetricName(line){
+  if(!line || /医院|报告|日期|时间|姓名|性别|年龄|病历|住院|门诊|科室|医生|医师|标本|样本|项目|结果|单位|参考|范围|异常|提示|审核|打印|申请|采样|收样|送检|诊断|床号/.test(line)) return '';
+  if(/^\s*[<>≤≥]?\s*\d/.test(line) || OCR_UNIT_PATTERN.test(line) && !/[\u3400-\u9fff]/.test(line)) return '';
+  var label = line.replace(/^\s*\d+[.、]\s*/, '').replace(/[\s:：]+[+-]?\d+(?:\.\d+)?(?:\s.*)?$/, '').trim();
+  if(/[\u3400-\u9fff]/.test(label)){
+    label = label.replace(/[（(]?\s*[A-Za-z][A-Za-z0-9-]*\s*[）)]?\s*$/, '').replace(/\s+/g, '');
+    return label;
+  }
+  var codeMatch = label.match(/^([A-Z][A-Z0-9-]{0,7})$/);
+  return codeMatch && !/^(?:H|L|N)$/.test(codeMatch[1]) ? codeMatch[1] : '';
+}
+function parseOcrLines(lines){
+  var texts = Array.isArray(lines) ? lines.map(function(line){ return String(line).trim(); }).filter(Boolean) : [];
+  var knownLineIndexes = {};
+  var results = OCR_METRICS.map(function(metric){
+    var matchIndex = findOcrMetricLine(texts, metric);
+    if(matchIndex >= 0) knownLineIndexes[matchIndex] = true;
+    var parsed = parseOcrMetricAt(texts, matchIndex, metric.unit, metric.ref);
+    return {name:metric.name, value:parsed.value, unit:parsed.unit, ref:parsed.ref};
+  });
+  var names = {};
+  results.forEach(function(item){ names[item.name] = true; });
+  texts.forEach(function(line, index){
+    if(knownLineIndexes[index]) return;
+    var matchesKnown = OCR_METRICS.some(function(metric){
+      return metric.aliases.some(function(alias){ return ocrLineHasAlias(line, alias); });
+    });
+    if(matchesKnown) return;
+    var name = unknownOcrMetricName(line);
+    if(!name || names[name]) return;
+    var parsed = parseOcrMetricAt(texts, index, '', '--');
+    if(parsed.value === '--') return;
+    results.push({name:name, value:parsed.value, unit:parsed.unit, ref:parsed.ref});
+    names[name] = true;
+  });
+  return results;
+}
+function extractReportMeta(lines){
+  var texts = Array.isArray(lines) ? lines.map(function(line){ return String(line).trim(); }).filter(Boolean) : [];
+  var hospital = '';
+  for(var i=0;i<texts.length;i++){
+    if(texts[i].indexOf('医院') >= 0 && texts[i].indexOf('住院号') < 0){ hospital = texts[i]; break; }
+  }
+  if(!hospital){
+    for(var j=0;j<texts.length;j++){
+      if(/院$/.test(texts[j]) && texts[j].indexOf('住院') < 0){ hospital = texts[j]; break; }
+    }
+  }
+  hospital = hospital.replace(/^(?:医院(?:名称)?|送检医院)\s*[:：]\s*/, '').trim();
+  var datePattern = /20\d{2}[-/.年]\d{1,2}[-/.月]\d{1,2}/;
+  var reportDate = '';
+  var firstDate = '';
+  texts.forEach(function(line, index){
+    var match = line.match(datePattern);
+    if(!match) return;
+    if(!firstDate) firstDate = match[0];
+    var context = [texts[index - 1] || '', line, texts[index + 1] || ''].join(' ');
+    if(!reportDate && /报告时间|报告日期|检验日期|检查日期|日期/.test(context)) reportDate = match[0];
+  });
+  reportDate = reportDate || firstDate;
+  if(reportDate){
+    var parts = reportDate.match(/(20\d{2})[-/.年](\d{1,2})[-/.月](\d{1,2})/);
+    reportDate = parts ? parts[1] + '-' + parts[2].padStart(2, '0') + '-' + parts[3].padStart(2, '0') : '';
+  }
+  return {hospital:hospital, reportDate:reportDate};
+}
+function clearDynamicScanRows(){
+  document.querySelectorAll('#scan-step2 .confirm-table .ct-row[data-dynamic="true"]').forEach(function(row){ row.remove(); });
+}
+function appendDynamicScanRow(result){
+  var row = document.createElement('div');
+  row.className = 'ct-row';
+  row.setAttribute('data-dynamic', 'true');
+  var name = document.createElement('span');
+  name.className = 'ct-name';
+  name.textContent = result.name;
+  var input = document.createElement('input');
+  input.className = 'num';
+  input.value = result.value;
+  input.setAttribute('inputmode', 'decimal');
+  input.setAttribute('aria-label', result.name);
+  var unit = document.createElement('span');
+  unit.className = 'ct-unit';
+  unit.textContent = result.unit || '';
+  var ref = document.createElement('span');
+  ref.className = 'ct-ref';
+  ref.textContent = result.ref || '--';
+  row.appendChild(name);
+  row.appendChild(input);
+  row.appendChild(unit);
+  row.appendChild(ref);
+  document.querySelector('#scan-step2 .confirm-table').appendChild(row);
+}
+function applyOcrResults(results, meta){
   var found = 0;
+  clearDynamicScanRows();
   document.querySelectorAll('#scan-step2 .ct-row').forEach(function(row){
     var name = row.querySelector('.ct-name').textContent;
     var result = results.find(function(item){ return item.name === name; });
@@ -2412,6 +2518,13 @@ function applyOcrResults(results){
       row.querySelector('.ct-ref').textContent = result.ref;
     }
   });
+  results.forEach(function(result){
+    if(OCR_METRICS.some(function(metric){ return metric.name === result.name; }) || result.value === '--') return;
+    appendDynamicScanRow(result);
+    found++;
+  });
+  if(meta && meta.hospital) document.getElementById('scan-hospital').value = meta.hospital;
+  if(meta && meta.reportDate) document.getElementById('scan-report-date').value = meta.reportDate;
   document.querySelector('#scan-step2 .card-title .badge').textContent = found + ' 项已识别';
   return found;
 }
@@ -2429,6 +2542,7 @@ function clearScanQueue(){
   document.querySelector('#ocr-state .o-t').textContent = '正在识别报告内容';
 }
 function restoreScanInputs(){
+  clearDynamicScanRows();
   document.querySelectorAll('#scan-step2 .ct-row').forEach(function(row){
     var input = row.querySelector('input');
     input.value = input.getAttribute('data-default') || '';
@@ -2626,7 +2740,7 @@ async function recognizeAlbumFile(file, myToken, ocr){
     var remaining = 800 - (Date.now() - startedAt);
     if(remaining > 0) await new Promise(function(resolve){ setTimeout(resolve, remaining); });
     if(myToken !== scanToken) return;
-    var found = applyOcrResults(parseOcrLines(data.lines));
+    var found = applyOcrResults(parseOcrLines(data.lines), extractReportMeta(data.lines));
     ocr.classList.remove('on');
     document.getElementById('scan-step1').style.display='none';
     document.getElementById('scan-step2').style.display='';
@@ -2656,7 +2770,8 @@ function saveScan(){
   if(count > 0){
     try{
       localStorage.setItem('kangfu_metrics', JSON.stringify(metrics));
-      localStorage.setItem('kangfu_metrics_date', localDateString());
+      var reportDate = document.getElementById('scan-report-date').value.trim();
+      if(reportDate) localStorage.setItem('kangfu_metrics_date', reportDate);
       var hospital = document.getElementById('scan-hospital').value.trim();
       if(hospital) localStorage.setItem('kangfu_metrics_hospital', hospital);
     }catch(e){}
